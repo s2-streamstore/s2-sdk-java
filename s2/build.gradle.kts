@@ -85,7 +85,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/twelvehart/s2-java-sdk")
+            url = uri("https://maven.pkg.github.com/ASRagab/s2-java-sdk")
             credentials {
                 username = System.getenv("GH_ACTOR")
                 password = System.getenv("GH_TOKEN")
