@@ -12,6 +12,8 @@ val grpcVersion = "1.64.0"
 val protobufVersion = "3.25.0"
 val tomcatAnnotationsVersion = "11.0.2"
 val javaxAnnotationVersion = "1.3.2"
+val mockitoVersion = "5.8.0"
+val assertJVersion = "3.24.2"
 
 dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
@@ -24,10 +26,17 @@ dependencies {
     
     compileOnly("org.apache.tomcat:tomcat-annotations-api:$tomcatAnnotationsVersion")
 
-
-    
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation(libs.junit.jupiter)
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
+    testImplementation("io.grpc:grpc-inprocess:$grpcVersion")
+    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation("org.mockito:mockito-junit-jupiter:$mockitoVersion") {
+        exclude(group = "org.junit.jupiter")
+    }
+    testImplementation("org.assertj:assertj-core:$assertJVersion")
+    
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 protobuf {
@@ -54,6 +63,9 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+      events("passed", "skipped", "failed")
+    }
 }
 
 java {
@@ -69,6 +81,16 @@ publishing {
       artifactId = "s2"
       version = "0.0.1"
       from(components["java"])
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/twelvehart/s2-java-sdk")
+            credentials {
+                username = System.getenv("GH_ACTOR")
+                password = System.getenv("GH_TOKEN")
+            }
+        }
     }
   }
 }
