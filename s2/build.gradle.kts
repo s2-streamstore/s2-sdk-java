@@ -2,6 +2,7 @@ plugins {
     id("buildlogic.java-library-conventions")
     id("com.google.protobuf") version "0.9.4"
     id("maven-publish")
+    id("net.researchgate.release") version "3.1.0"
 }
 
 repositories {
@@ -77,9 +78,6 @@ java {
 publishing {
   publications {
     create<MavenPublication>("maven") {
-      groupId = "org.twelvehart"
-      artifactId = "s2"
-      version = "0.0.1"
       from(components["java"])
     }
     repositories {
@@ -93,4 +91,17 @@ publishing {
         }
     }
   }
+}
+
+release {
+    git {
+        requireBranch.set("main")
+        pushToRemote.set("origin")
+        signTag.set(false)
+        tagTemplate.set("v\${version}")
+    }
+}
+
+tasks.afterReleaseBuild {
+    dependsOn(tasks.publish)
 }
