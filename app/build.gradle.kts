@@ -17,7 +17,7 @@ repositories {
 val grpcVersion = "1.64.0"
 
 dependencies {
-    implementation("org.twelvehart:s2:0.0.1")
+    implementation(project(":s2"))
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
