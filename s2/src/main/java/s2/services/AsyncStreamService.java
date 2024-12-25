@@ -53,6 +53,9 @@ public class AsyncStreamService extends BaseService {
    */
   public StreamObserver<AppendSessionRequest> openAppendSession(String stream,
       Consumer<AppendSessionResponse> onResponse, Consumer<Throwable> onError) {
+    if (onResponse == null || onError == null) {
+      throw new NullPointerException("Callbacks cannot be null");
+    }
     return asyncStub.appendSession(new StreamObserver<AppendSessionResponse>() {
       @Override
       public void onNext(AppendSessionResponse response) {
@@ -82,6 +85,9 @@ public class AsyncStreamService extends BaseService {
    */
   public void openReadSession(String stream, long startSeqNum, ReadLimit limit,
       Consumer<ReadSessionResponse> onResponse, Consumer<Throwable> onError) {
+    if (onResponse == null || onError == null) {
+      throw new NullPointerException("Callbacks cannot be null");
+    }
     var requestBuilder =
         ReadSessionRequest.newBuilder().setStream(stream).setStartSeqNum(startSeqNum);
     if (limit != null) {
