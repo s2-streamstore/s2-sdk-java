@@ -1,5 +1,5 @@
 plugins {
-    id("buildlogic.java-library-conventions")
+    `java-library`
     id("com.google.protobuf") version "0.9.4"
     id("maven-publish")
     id("net.researchgate.release") version "3.1.0"
