@@ -95,7 +95,7 @@ publishing {
 
 release {
     git {
-        requireBranch.set("main")
+        requireBranch.set("") // Since we use GHA to release this should be okay
         pushToRemote.set("origin")
         signTag.set(false)
         tagTemplate.set("v\${version}")
