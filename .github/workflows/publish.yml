@@ -2,7 +2,7 @@ name: Package and publish
 
 on:
   release:
-    types: [published]
+    types: [created]
 
 jobs:
   build:
@@ -25,21 +25,17 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Extract version from tag
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Update version
-        run: |
-          sed -i "s/version=.*/version=$VERSION/" gradle.properties
-
-      - name: Build with Gradle
-        run: ./gradlew s2:build
+      
+      - name: Get next version
+        uses: reecetech/version-increment@2024.10.1
+        id: version
+        with:
+          scheme: semver
+          increment: patch
 
       - name: Publish to GitHub Packages
-        run: ./gradlew s2:publish
-        env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew s2:release \
+            -PreleaseVersion=${{ steps.version.outputs.current-version }} \
+            -PreleaseNewVersion="${{ steps.version.outputs.version }}-SNAPSHOT"
+

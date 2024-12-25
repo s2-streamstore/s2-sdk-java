@@ -85,8 +85,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/ASRagab/s2-java-sdk")
             credentials {
-                username = System.getenv("GH_ACTOR")
-                password = System.getenv("GH_TOKEN")
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
