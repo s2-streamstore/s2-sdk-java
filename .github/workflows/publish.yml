@@ -33,11 +33,18 @@ jobs:
           scheme: semver
           increment: patch
 
+      # Setup git config of the GitHub Actions Bot
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
       - name: Publish to GitHub Packages
         run: |
           ./gradlew s2:release \
-            -PreleaseVersion=${{ steps.version.outputs.current-version }} \
-            -PreleaseNewVersion="${{ steps.version.outputs.version }}-SNAPSHOT"
+            -Prelease.useAutomaticVersion=true \
+            -Prelease.releaseVersion=${{ steps.version.outputs.current-version }} \
+            -Prelease.releaseNewVersion="${{ steps.version.outputs.version }}-SNAPSHOT"
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
