@@ -11,5 +11,5 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
-rootProject.name = "s2-java-sdk"
+rootProject.name = "s2-sdk-java"
 include("app", "s2")
