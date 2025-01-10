@@ -1,5 +1,8 @@
 # S2 Java SDK
 
+> [!WARNING]
+> This SDK is actively in development, and not officially supported yet!
+
 A Java SDK for interacting with the S2 streaming service. This SDK provides a hopefully convenientinterface for working with S2's gRPC-based streaming API.
 
 ## Features
