@@ -19,8 +19,8 @@ A Java SDK for interacting with the S2 streaming service. This SDK provides a ho
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/s2-java-sdk.git
-cd s2-java-sdk
+git clone https://github.com/s2-streamstore/s2-sdk-java
+cd s2-sdk-java
 ```
 
 2. Build the project:
@@ -39,7 +39,7 @@ Add this dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>org.twelvehart</groupId>
+    <groupId>dev.s2</groupId>
     <artifactId>s2</artifactId>
     <version>0.0.1</version>
 </dependency>
@@ -51,7 +51,7 @@ Add this dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("org.twelvehart:s2:0.0.1")
+    implementation("dev.s2:s2:0.0.1")
 }
 ```
 
