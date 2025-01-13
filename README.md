@@ -22,7 +22,7 @@ A Java SDK for interacting with the S2 streaming service. This SDK provides a ho
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/s2-streamstore/s2-sdk-java
+git clone --recurse-submodules https://github.com/s2-streamstore/s2-sdk-java 
 cd s2-sdk-java
 ```
 
