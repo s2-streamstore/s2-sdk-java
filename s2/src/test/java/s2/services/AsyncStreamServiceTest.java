@@ -12,8 +12,7 @@ import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import s2.v1alpha.S2.*;
-import s2.v1alpha.StreamServiceGrpc;
+import s2.v1alpha.*;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;

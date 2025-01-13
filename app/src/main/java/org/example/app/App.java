@@ -4,7 +4,7 @@
 package org.example.app;
 
 import s2.services.Client;
-import s2.v1alpha.S2.*;
+import s2.v1alpha.*;
 
 import java.util.List;
 import java.util.Optional;

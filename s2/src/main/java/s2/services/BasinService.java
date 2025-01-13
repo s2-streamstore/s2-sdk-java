@@ -3,7 +3,7 @@ package s2.services;
 import io.grpc.ManagedChannel;
 import io.grpc.CallCredentials;
 import s2.v1alpha.BasinServiceGrpc;
-import s2.v1alpha.S2.*;
+import s2.v1alpha.*;
 
 import java.util.ArrayList;
 import java.util.List;

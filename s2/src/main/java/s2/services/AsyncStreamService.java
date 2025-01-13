@@ -3,8 +3,7 @@ package s2.services;
 import io.grpc.CallCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import s2.v1alpha.S2.*;
-import s2.v1alpha.StreamServiceGrpc;
+import s2.v1alpha.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
