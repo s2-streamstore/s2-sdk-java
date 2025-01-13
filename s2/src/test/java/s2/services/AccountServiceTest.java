@@ -12,7 +12,8 @@ import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import s2.v1alpha.*;
+import s2.v1alpha.AccountServiceGrpc;
+import s2.v1alpha.S2.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {

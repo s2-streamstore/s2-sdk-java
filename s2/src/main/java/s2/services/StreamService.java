@@ -2,7 +2,8 @@ package s2.services;
 
 import io.grpc.ManagedChannel;
 import io.grpc.CallCredentials;
-import s2.v1alpha.*;
+import s2.v1alpha.S2.*;
+import s2.v1alpha.StreamServiceGrpc;
 
 import java.util.List;
 
