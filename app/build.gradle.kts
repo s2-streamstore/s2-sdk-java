@@ -5,8 +5,8 @@
  */
 
 plugins {
-  application
-  java
+    application
+    java
 }
 
 repositories {
@@ -22,13 +22,26 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
+    implementation("org.slf4j:slf4j-api:1.7.32")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
 }
 
-application {
-    // Define the main class for the application.
-    mainClass.set("org.example.app.App")
+val executables = mapOf(
+    "AppendSessionDemo" to "org.example.app.AppendSessionDemo",
+    "CreateStreamDemo" to "org.example.app.CreateStreamDemo",
+    "ReadSessionDemo" to "org.example.app.ReadSessionDemo",
+)
+
+executables.forEach { name, mainClassName ->
+    tasks.register<JavaExec>("run${name}") {
+        group = "application"
+        description = "Run the $name executable"
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(mainClassName)
+    }
 }
+
 
 tasks.test {
     useJUnitPlatform()

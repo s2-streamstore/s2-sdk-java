@@ -20,11 +20,11 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
-    
+
     implementation("javax.annotation:javax.annotation-api:$javaxAnnotationVersion")
 
     implementation("com.google.protobuf:protobuf-java:$protobufVersion")
-    
+    implementation("org.slf4j:slf4j-api:1.7.32")
     compileOnly("org.apache.tomcat:tomcat-annotations-api:$tomcatAnnotationsVersion")
 
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
@@ -35,8 +35,9 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter:$mockitoVersion") {
         exclude(group = "org.junit.jupiter")
     }
+    testImplementation("uk.org.webcompere:system-stubs-jupiter:2.1.7")
     testImplementation("org.assertj:assertj-core:$assertJVersion")
-    
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -65,7 +66,7 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.test {
     useJUnitPlatform()
     testLogging {
-      events("passed", "skipped", "failed")
+        events("passed", "skipped", "failed")
     }
 }
 
@@ -76,21 +77,21 @@ java {
 }
 
 publishing {
-  publications {
-    create<MavenPublication>("maven") {
-      from(components["java"])
-    }
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/s2-streamstore/s2-sdk-java")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/s2-streamstore/s2-sdk-java")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
-  }
 }
 
 release {
@@ -99,10 +100,10 @@ release {
     failOnUpdateNeeded = false
     failOnCommitNeeded = false
     git {
-      requireBranch.set("") // Since we use GHA to release this should be okay
-      pushToRemote.set("origin")
-      signTag.set(false)
-      tagTemplate.set("v\${version}")
+        requireBranch.set("") // Since we use GHA to release this should be okay
+        pushToRemote.set("origin")
+        signTag.set(false)
+        tagTemplate.set("v\${version}")
     }
 }
 
