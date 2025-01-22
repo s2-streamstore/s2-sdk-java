@@ -1,6 +1,5 @@
 package s2.utils;
 
-
 public class StreamUtils {
 
   public static void validateStreamName(String streamName) {
