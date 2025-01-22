@@ -1,15 +1,10 @@
-package s2.client;
+package s2.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import s2.config.Address;
-import s2.config.Cloud;
-import s2.config.Direct;
-import s2.config.Endpoints;
-import s2.config.ParentZone;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;

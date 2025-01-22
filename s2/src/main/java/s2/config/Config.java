@@ -68,7 +68,21 @@ public class Config {
       return this;
     }
 
-    private void validate() {}
+    private void validate() {
+      this.maxRetries.ifPresent(
+          maxRetries -> {
+            if (maxRetries < 0) {
+              throw new IllegalArgumentException("maxRetries must be a positive integer");
+            }
+          });
+
+      this.requestTimeout.ifPresent(
+          requestTimeout -> {
+            if (requestTimeout.isNegative()) {
+              throw new IllegalArgumentException("requestTimeout must be a positive duration");
+            }
+          });
+    }
 
     public Config build() {
       validate();

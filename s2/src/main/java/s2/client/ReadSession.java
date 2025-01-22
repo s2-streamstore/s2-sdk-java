@@ -22,16 +22,13 @@ public class ReadSession {
   private static final Logger logger = LoggerFactory.getLogger(ReadSession.class.getName());
   final ScheduledExecutorService executor;
   final StreamClient client;
-
   final AtomicLong nextStartSeqNum;
   final AtomicLong consumedRecords = new AtomicLong();
   final AtomicLong consumedBytes = new AtomicLong(0);
-
   final Consumer<ReadOutput> onResponse;
   final Consumer<Throwable> onError;
-
+  final ReadSessionRequest request;
   final AtomicBoolean hasCompleted = new AtomicBoolean(false);
-
   final AtomicInteger remainingAttempts;
   final ListenableFuture<Void> daemon;
 
@@ -42,22 +39,20 @@ public class ReadSession {
       Consumer<Throwable> onError) {
     this.executor = client.executor;
     this.client = client;
-
     this.onResponse = onResponse;
     this.onError = onError;
-
+    this.request = request;
     this.nextStartSeqNum = new AtomicLong(request.startSeqNum);
     this.remainingAttempts = new AtomicInteger(client.config.maxRetries);
-
-    this.daemon = this.retrying(request);
+    this.daemon = this.retrying();
   }
 
   private ListenableFuture<Void> readSessionInner(
-      ReadSessionRequest request, Consumer<ReadOutput> innerOnResponse) {
+      ReadSessionRequest updatedRequest, Consumer<ReadOutput> innerOnResponse) {
 
     SettableFuture<Void> fut = SettableFuture.create();
     this.client.asyncStub.readSession(
-        request.toProto(this.client.streamName),
+        updatedRequest.toProto(this.client.streamName),
         new StreamObserver<ReadSessionResponse>() {
 
           @Override
@@ -85,11 +80,11 @@ public class ReadSession {
     return fut;
   }
 
-  private ListenableFuture<Void> retrying(ReadSessionRequest request) {
+  private ListenableFuture<Void> retrying() {
 
     return Futures.catchingAsync(
         readSessionInner(
-            request,
+            request.update(nextStartSeqNum.get(), consumedRecords.get(), consumedBytes.get()),
             resp -> {
               if (resp instanceof Batch batch) {
                 var lastRecordIdx = batch.lastSeqNum();
@@ -107,8 +102,7 @@ public class ReadSession {
               && BaseClient.retryableStatus(status)
               && !this.hasCompleted.get()) {
             logger.debug("readSession retrying, status={}", status);
-            return retrying(
-                request.update(nextStartSeqNum.get(), consumedRecords.get(), consumedBytes.get()));
+            return retrying();
           } else {
             logger.debug("readSession failed, status={}", status);
             onError.accept(t);
