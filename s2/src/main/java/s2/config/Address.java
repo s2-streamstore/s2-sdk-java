@@ -29,6 +29,11 @@ public class Address {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(host, port);
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
@@ -38,10 +43,5 @@ public class Address {
     }
     Address that = (Address) obj;
     return (this.host.equals(that.host) && this.port == that.port);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(host, port);
   }
 }

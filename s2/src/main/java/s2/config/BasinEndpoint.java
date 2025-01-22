@@ -12,6 +12,11 @@ public abstract sealed class BasinEndpoint permits ParentZone, Direct {
   public abstract String toTarget(String basin);
 
   @Override
+  public int hashCode() {
+    return Objects.hash(address);
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
@@ -21,10 +26,5 @@ public abstract sealed class BasinEndpoint permits ParentZone, Direct {
     }
     BasinEndpoint that = (BasinEndpoint) obj;
     return Objects.equals(address, that.address);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(address);
   }
 }

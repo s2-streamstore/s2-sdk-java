@@ -4,6 +4,7 @@ import java.util.Optional;
 
 public class ReadRequest {
 
+  public static final ReadRequest DEFAULT = new ReadRequest(0L, ReadLimit.NONE);
   protected final long startSeqNum;
   protected final ReadLimit readLimit;
 
@@ -11,8 +12,6 @@ public class ReadRequest {
     this.startSeqNum = startSeqNum;
     this.readLimit = readLimit;
   }
-
-  public static final ReadRequest DEFAULT = new ReadRequest(0L, ReadLimit.NONE);
 
   public static ReadRequestBuilder newBuilder() {
     return new ReadRequestBuilder();

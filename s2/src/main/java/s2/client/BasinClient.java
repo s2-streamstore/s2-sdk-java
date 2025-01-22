@@ -7,18 +7,30 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.stub.MetadataUtils;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import s2.auth.BearerTokenCallCredentials;
 import s2.config.Config;
+import s2.types.CreateStreamRequest;
+import s2.types.Paginated;
+import s2.types.ReconfigureStreamRequest;
+import s2.types.StreamConfig;
+import s2.types.StreamInfo;
 import s2.v1alpha.BasinServiceGrpc;
-import s2.v1alpha.ListStreamsRequest;
-import s2.v1alpha.StreamInfo;
+import s2.v1alpha.DeleteStreamRequest;
+import s2.v1alpha.GetStreamConfigRequest;
 
 public class BasinClient extends BaseClient {
   private final String basin;
   private final BasinServiceGrpc.BasinServiceFutureStub futureStub;
+
+  public BasinClient(String basin, Config config, ScheduledExecutorService executor) {
+    this(
+        basin,
+        config,
+        ManagedChannelBuilder.forTarget(config.endpoints.basin.toTarget(basin)).build(),
+        executor);
+  }
 
   public BasinClient(
       String basin, Config config, ManagedChannel channel, ScheduledExecutorService executor) {
@@ -32,33 +44,74 @@ public class BasinClient extends BaseClient {
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
   }
 
-  public BasinClient(String basin, Config config, ScheduledExecutorService executor) {
-    this(
-        basin,
-        config,
-        ManagedChannelBuilder.forTarget(config.endpoints.basin.toTarget(basin)).build(),
-        executor);
+  public ListenableFuture<Paginated<StreamInfo>> listStreams(
+      s2.types.ListStreamsRequest listStreamsRequest) {
+    return withTimeout(
+        () ->
+            Futures.transform(
+                withStaticRetries(
+                    config.maxRetries,
+                    () -> this.futureStub.listStreams(listStreamsRequest.toProto())),
+                resp ->
+                    new Paginated<>(
+                        resp.getHasMore(),
+                        resp.getStreamsList().stream().map(StreamInfo::fromProto).toList()),
+                executor));
   }
 
-  public ListenableFuture<List<StreamInfo>> listStreams(
-      String prefix, String startAfter, List<StreamInfo> accumulator) {
-    return Futures.transformAsync(
-        this.futureStub.listStreams(
-            ListStreamsRequest.newBuilder().setPrefix(prefix).setStartAfter(startAfter).build()),
-        resp -> {
-          accumulator.addAll(resp.getStreamsList());
-          if (resp.getHasMore()) {
-            var newStartAfter = resp.getStreams(resp.getStreamsCount() - 1).getName();
-            return listStreams(prefix, newStartAfter, accumulator);
-          } else {
-            return Futures.immediateFuture(accumulator);
-          }
-        },
-        executor);
+  public ListenableFuture<StreamInfo> createStream(CreateStreamRequest createStreamRequest) {
+    final var meta = new Metadata();
+    final var token = UUID.randomUUID().toString();
+    meta.put(Key.of("s2-request-token", Metadata.ASCII_STRING_MARSHALLER), token);
+    return withTimeout(
+        () ->
+            Futures.transform(
+                withStaticRetries(
+                    config.maxRetries,
+                    () ->
+                        this.futureStub
+                            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
+                            .createStream(createStreamRequest.toProto())),
+                resp -> StreamInfo.fromProto(resp.getInfo()),
+                executor));
   }
 
-  public ListenableFuture<List<StreamInfo>> listStreams(String prefix) {
-    return listStreams(prefix, "", new ArrayList<>());
+  public ListenableFuture<Void> deleteStream(String streamName) {
+    return withTimeout(
+        () ->
+            Futures.transform(
+                withStaticRetries(
+                    config.maxRetries,
+                    () ->
+                        this.futureStub.deleteStream(
+                            DeleteStreamRequest.newBuilder().setStream(streamName).build())),
+                resp -> null,
+                executor));
+  }
+
+  public ListenableFuture<StreamConfig> getStreamConfig(String streamName) {
+    return withTimeout(
+        () ->
+            Futures.transform(
+                withStaticRetries(
+                    config.maxRetries,
+                    () ->
+                        this.futureStub.getStreamConfig(
+                            GetStreamConfigRequest.newBuilder().setStream(streamName).build())),
+                resp -> StreamConfig.fromProto(resp.getConfig()),
+                executor));
+  }
+
+  public ListenableFuture<StreamConfig> reconfigureStream(
+      ReconfigureStreamRequest reconfigureStreamRequest) {
+    return withTimeout(
+        () ->
+            Futures.transform(
+                withStaticRetries(
+                    config.maxRetries,
+                    () -> this.futureStub.reconfigureStream(reconfigureStreamRequest.toProto())),
+                resp -> StreamConfig.fromProto(resp.getConfig()),
+                executor));
   }
 
   public StreamClient streamClient(String streamName) {

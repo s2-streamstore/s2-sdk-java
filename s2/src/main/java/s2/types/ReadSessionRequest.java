@@ -12,13 +12,13 @@ public class ReadSessionRequest {
     this.readLimit = readLimit;
   }
 
+  public static ReadSessionRequestBuilder newBuilder() {
+    return new ReadSessionRequestBuilder();
+  }
+
   public ReadSessionRequest update(long newStartSeqNum, long consumedRecords, long consumedBytes) {
     return new ReadSessionRequest(
         newStartSeqNum, readLimit.remaining(consumedRecords, consumedBytes));
-  }
-
-  public static ReadSessionRequestBuilder newBuilder() {
-    return new ReadSessionRequestBuilder();
   }
 
   public s2.v1alpha.ReadSessionRequest toProto() {

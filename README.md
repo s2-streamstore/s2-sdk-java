@@ -3,7 +3,8 @@
 > [!WARNING]
 > This SDK is actively in development, and not officially supported yet!
 
-A Java SDK for interacting with the S2 streaming service. This SDK provides a hopefully convenientinterface for working with S2's gRPC-based streaming API.
+A Java SDK for interacting with the S2 streaming service. This SDK provides a hopefully
+convenientinterface for working with S2's gRPC-based streaming API.
 
 ## Features
 
@@ -21,17 +22,20 @@ A Java SDK for interacting with the S2 streaming service. This SDK provides a ho
 ### Building from Source
 
 1. Clone the repository:
+
 ```bash
 git clone --recurse-submodules https://github.com/s2-streamstore/s2-sdk-java 
 cd s2-sdk-java
 ```
 
 2. Build the project:
+
 ```bash
 ./gradlew build
 ```
 
 3. Install to local Maven repository:
+
 ```bash
 ./gradlew s2:publishToMavenLocal
 ```
@@ -123,15 +127,16 @@ if (readOutput.hasBatch()) {
 ## Project Structure
 
 - `s2/` - The main SDK module
-  - `src/main/java/s2/services/` - Core service implementations
-  - `src/main/java/s2/channel/` - Channel management
-  - `src/main/java/s2/auth/` - Authentication handling
-  - `src/main/proto/` - Protocol Buffer definitions
+    - `src/main/java/s2/services/` - Core service implementations
+    - `src/main/java/s2/channel/` - Channel management
+    - `src/main/java/s2/auth/` - Authentication handling
+    - `src/main/proto/` - Protocol Buffer definitions
 - `app/` - Example application demonstrating SDK usage
 
 ## Running the Example App
 
 1. Set required environment variables:
+
 ```bash
 export S2_HOST=aws.s2.dev
 export S2_PORT=443
@@ -139,6 +144,7 @@ export S2_TOKEN=your-token
 ```
 
 2. Run the example:
+
 ```bash
 ./gradlew app:run
 ```
@@ -170,4 +176,5 @@ client.streamAsync().openReadSession(
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file
+for details.

@@ -28,7 +28,9 @@ dependencies {
 }
 
 val executables = mapOf(
+    "AccountDemo" to "org.example.app.AccountDemo",
     "AppendSessionDemo" to "org.example.app.AppendSessionDemo",
+    "BasinDemo" to "org.example.app.BasinDemo",
     "CreateStreamDemo" to "org.example.app.CreateStreamDemo",
     "ReadSessionDemo" to "org.example.app.ReadSessionDemo",
 )

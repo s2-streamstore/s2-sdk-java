@@ -35,7 +35,8 @@ public class AppendSessionDemo {
               out -> logger.info("Received output={}", out),
               err -> logger.error("Received error.", err));
 
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 1000090; i++) {
+        logger.info("Sending append session={}", i);
         appendSession.submit(
             AppendInput.newBuilder()
                 .withRecords(

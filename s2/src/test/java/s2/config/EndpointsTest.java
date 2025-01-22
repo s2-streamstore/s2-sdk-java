@@ -12,14 +12,14 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 @ExtendWith(SystemStubsExtension.class)
 class EndpointsTest {
 
+  @SystemStub private final EnvironmentVariables variables = new EnvironmentVariables();
+
   @Test
   void endpointAws() {
     var endpoints = Endpoints.forCloud(Cloud.AWS);
     assertThat(endpoints.account).isEqualTo(new Address("aws.s2.dev", 443));
     assertThat(endpoints.basin).isEqualTo(new ParentZone(new Address("b.aws.s2.dev", 443)));
   }
-
-  @SystemStub private final EnvironmentVariables variables = new EnvironmentVariables();
 
   @Test
   void endpointFromEnvironment() {

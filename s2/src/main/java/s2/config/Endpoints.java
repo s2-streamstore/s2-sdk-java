@@ -11,12 +11,6 @@ public final class Endpoints {
     this.basin = basin;
   }
 
-  public static Endpoints forCloud(Cloud cloud) {
-    return new Endpoints(
-        Address.fromString(String.format("%s.s2.dev", cloud)),
-        new ParentZone(Address.fromString(String.format("b.%s.s2.dev", cloud))));
-  }
-
   public static Endpoints forCell(Cloud cloud, String cell) {
     var endpoint = Address.fromString(String.format("%s.o.%s.s2.dev", cloud, cell));
     return new Endpoints(endpoint, new Direct(endpoint));
@@ -40,6 +34,12 @@ public final class Endpoints {
             });
 
     return endpoints;
+  }
+
+  public static Endpoints forCloud(Cloud cloud) {
+    return new Endpoints(
+        Address.fromString(String.format("%s.s2.dev", cloud)),
+        new ParentZone(Address.fromString(String.format("b.%s.s2.dev", cloud))));
   }
 
   public boolean singleEndpoint() {

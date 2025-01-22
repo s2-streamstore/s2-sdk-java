@@ -17,9 +17,9 @@ import s2.types.Batch;
 import s2.types.ReadLimit;
 import s2.types.ReadOutput;
 import s2.types.ReadSessionRequest;
-import s2.v1alpha.MockStreamService;
+import s2.v1alpha.StreamService.MockReadSessionStreamService;
 
-public class AppendSessionTest {
+public class ReadSessionTest {
   private Server server;
   private ManagedChannel channel;
   private StreamClient client;
@@ -30,7 +30,7 @@ public class AppendSessionTest {
     server =
         InProcessServerBuilder.forName(serverName)
             .directExecutor()
-            .addService(new MockStreamService())
+            .addService(new MockReadSessionStreamService())
             .build()
             .start();
 

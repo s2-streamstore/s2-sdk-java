@@ -9,7 +9,6 @@ import s2.config.Endpoints;
 import s2.types.Batch;
 import s2.types.FirstSeqNum;
 import s2.types.NextSeqNum;
-import s2.types.ReadLimit;
 import s2.types.ReadSessionRequest;
 
 public class ReadSessionDemo {
@@ -30,10 +29,7 @@ public class ReadSessionDemo {
 
       var readSession =
           streamClient.readSession(
-              ReadSessionRequest.newBuilder()
-                  .withStartSeqNum(10)
-                  .withReadLimit(ReadLimit.count(100))
-                  .build(),
+              ReadSessionRequest.newBuilder().withStartSeqNum(10).build(),
               output -> {
                 if (output instanceof Batch batch) {
                   logger.info("Batch={}", batch);

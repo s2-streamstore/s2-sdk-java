@@ -24,16 +24,16 @@ public abstract class BaseClient implements AutoCloseable {
     this.executor = executor;
   }
 
-  public void close() throws Exception {
-    channel.shutdown();
-    executor.shutdown();
-  }
-
   static boolean retryableStatus(Status status) {
     return switch (status.getCode()) {
       case UNKNOWN, DEADLINE_EXCEEDED, UNAVAILABLE -> true;
       default -> false;
     };
+  }
+
+  public void close() throws Exception {
+    channel.shutdown();
+    executor.shutdown();
   }
 
   <T> ListenableFuture<T> withTimeout(Supplier<ListenableFuture<T>> op) {

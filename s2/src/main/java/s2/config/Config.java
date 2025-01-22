@@ -68,6 +68,17 @@ public class Config {
       return this;
     }
 
+    public Config build() {
+      validate();
+      return new Config(
+          this.token,
+          this.endpoints.orElse(Endpoints.forCloud(Cloud.AWS)),
+          this.userAgent.orElse("s2-sdk-java"),
+          this.maxRetries.orElse(3),
+          this.requestTimeout.orElse(Duration.ofSeconds(10)),
+          this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL));
+    }
+
     private void validate() {
       this.maxRetries.ifPresent(
           maxRetries -> {
@@ -82,17 +93,6 @@ public class Config {
               throw new IllegalArgumentException("requestTimeout must be a positive duration");
             }
           });
-    }
-
-    public Config build() {
-      validate();
-      return new Config(
-          this.token,
-          this.endpoints.orElse(Endpoints.forCloud(Cloud.AWS)),
-          this.userAgent.orElse("s2-sdk-java"),
-          this.maxRetries.orElse(3),
-          this.requestTimeout.orElse(Duration.ofSeconds(10)),
-          this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL));
     }
   }
 }

@@ -1,10 +1,16 @@
-package s2.v1alpha;
+package s2.v1alpha.StreamService;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicInteger;
+import s2.v1alpha.ReadOutput;
+import s2.v1alpha.ReadSessionRequest;
+import s2.v1alpha.ReadSessionResponse;
+import s2.v1alpha.SequencedRecord;
+import s2.v1alpha.SequencedRecordBatch;
+import s2.v1alpha.StreamServiceGrpc.StreamServiceImplBase;
 
-public class MockStreamService extends StreamServiceGrpc.StreamServiceImplBase {
+public class MockReadSessionStreamService extends StreamServiceImplBase {
   final AtomicInteger calls = new AtomicInteger(0);
 
   @Override

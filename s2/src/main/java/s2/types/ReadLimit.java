@@ -4,12 +4,38 @@ import java.util.Optional;
 
 public class ReadLimit {
 
+  public static final ReadLimit NONE = new ReadLimit(Optional.empty(), Optional.empty());
   public final Optional<Long> count;
   public final Optional<Long> bytes;
 
   private ReadLimit(Optional<Long> count, Optional<Long> bytes) {
     this.count = count;
     this.bytes = bytes;
+  }
+
+  // Static factory methods for different ways to instantiate ReadLimit
+  public static ReadLimit count(long count) {
+    if (count < 0) {
+      throw new IllegalArgumentException("Bytes must be positive");
+    }
+    return new ReadLimit(Optional.of(count), Optional.empty());
+  }
+
+  public static ReadLimit bytes(long bytes) {
+    if (bytes < 0) {
+      throw new IllegalArgumentException("Bytes must be positive");
+    }
+    return new ReadLimit(Optional.empty(), Optional.of(bytes));
+  }
+
+  public static ReadLimit countOrBytes(long count, long bytes) {
+    if (bytes < 0) {
+      throw new IllegalArgumentException("Bytes must be positive");
+    }
+    if (count < 0) {
+      throw new IllegalArgumentException("Bytes must be positive");
+    }
+    return new ReadLimit(Optional.of(count), Optional.of(bytes));
   }
 
   public ReadLimit remaining(long consumedRecords, long consumedBytes) {
@@ -35,33 +61,6 @@ public class ReadLimit {
                     "Invalid limit.bytes (%s) for unary request. Max bytes is 1MiB.", bytes));
           }
         });
-  }
-
-  public static final ReadLimit NONE = new ReadLimit(Optional.empty(), Optional.empty());
-
-  // Static factory methods for different ways to instantiate ReadLimit
-  public static ReadLimit count(long count) {
-    if (count < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
-    }
-    return new ReadLimit(Optional.of(count), Optional.empty());
-  }
-
-  public static ReadLimit bytes(long bytes) {
-    if (bytes < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
-    }
-    return new ReadLimit(Optional.empty(), Optional.of(bytes));
-  }
-
-  public static ReadLimit countOrBytes(long count, long bytes) {
-    if (bytes < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
-    }
-    if (count < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
-    }
-    return new ReadLimit(Optional.of(count), Optional.of(bytes));
   }
 
   public s2.v1alpha.ReadLimit toProto() {

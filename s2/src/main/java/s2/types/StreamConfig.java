@@ -8,8 +8,9 @@ public class StreamConfig {
   public final StorageClass storageClass;
   public final Optional<RetentionPolicy> retentionPolicy;
 
-  public s2.v1alpha.StreamConfig toProto() {
-    return s2.v1alpha.StreamConfig.newBuilder().build();
+  StreamConfig(StorageClass storageClass, Optional<RetentionPolicy> retentionPolicy) {
+    this.storageClass = storageClass;
+    this.retentionPolicy = retentionPolicy;
   }
 
   public static StreamConfig fromProto(s2.v1alpha.StreamConfig proto) {
@@ -28,13 +29,12 @@ public class StreamConfig {
     return new StreamConfig(storageClass, retentionPolicy);
   }
 
-  StreamConfig(StorageClass storageClass, Optional<RetentionPolicy> retentionPolicy) {
-    this.storageClass = storageClass;
-    this.retentionPolicy = retentionPolicy;
-  }
-
   public static StreamConfigBuilder newBuilder() {
     return new StreamConfigBuilder();
+  }
+
+  public s2.v1alpha.StreamConfig toProto() {
+    return s2.v1alpha.StreamConfig.newBuilder().build();
   }
 
   public static class StreamConfigBuilder {
