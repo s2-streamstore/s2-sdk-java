@@ -1,8 +1,12 @@
 plugins {
     `java-library`
-    id("maven-publish")
-    id("net.researchgate.release") version "3.1.0"
+    id("com.google.protobuf") version "0.9.4"
 }
+
+repositories {
+    mavenCentral()
+}
+
 
 repositories {
     mavenCentral()
@@ -16,8 +20,6 @@ val mockitoVersion = "5.8.0"
 val assertJVersion = "3.24.2"
 
 dependencies {
-    implementation(project(":s2-internal"))
-    
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
@@ -42,15 +44,21 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-Xlint:deprecation")
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                create("grpc")
+            }
+        }
     }
 }
 
@@ -60,37 +68,3 @@ java {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-        }
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/s2-streamstore/s2-sdk-java")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-    }
-}
-
-release {
-    // Disable the default checks since we're using GitHub Actions
-    failOnUnversionedFiles = false
-    failOnUpdateNeeded = false
-    failOnCommitNeeded = false
-    git {
-        requireBranch.set("") // Since we use GHA to release this should be okay
-        pushToRemote.set("origin")
-        signTag.set(false)
-        tagTemplate.set("v\${version}")
-    }
-}
-
-tasks.afterReleaseBuild {
-    dependsOn(tasks.publish)
-}
