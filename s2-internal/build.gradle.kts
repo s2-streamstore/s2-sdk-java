@@ -22,6 +22,7 @@ val assertJVersion = "3.24.2"
 dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-services:$grpcVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
 
     implementation("javax.annotation:javax.annotation-api:$javaxAnnotationVersion")
@@ -62,6 +63,19 @@ protobuf {
     }
 }
 
+
+val executables = mapOf(
+    "Emulator" to "emulator.Emulator",
+)
+
+executables.forEach { name, mainClassName ->
+    tasks.register<JavaExec>("run${name}") {
+        group = "application"
+        description = "Run the $name executable"
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(mainClassName)
+    }
+}
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))

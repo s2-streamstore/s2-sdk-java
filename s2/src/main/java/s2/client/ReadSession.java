@@ -81,7 +81,6 @@ public class ReadSession {
   }
 
   private ListenableFuture<Void> retrying() {
-
     return Futures.catchingAsync(
         readSessionInner(
             request.update(nextStartSeqNum.get(), consumedRecords.get(), consumedBytes.get()),
