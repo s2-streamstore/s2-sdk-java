@@ -11,7 +11,6 @@ public class MockStreamService extends StreamServiceGrpc.StreamServiceImplBase {
   public void readSession(
       ReadSessionRequest request, StreamObserver<ReadSessionResponse> responseObserver) {
     System.out.println("MockStreamService.readSession req " + request);
-    // Simulate a server response
 
     var startSeqNum = request.getStartSeqNum();
     var limit = request.getLimit().getCount();
