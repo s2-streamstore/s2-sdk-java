@@ -7,12 +7,12 @@
     </encoder>
   </appender>
 
-  <!-- Define the console appender -->
-  <logger level="trace" name="org.example.app">
-    <appender-ref ref="console"/>
-  </logger>
+  <!--  &lt;!&ndash; Define the console appender &ndash;&gt;-->
+  <!--  <logger level="trace" name="org.example.app">-->
+  <!--    <appender-ref ref="console"/>-->
+  <!--  </logger>-->
 
-  <logger level="trace" name="s2">
+  <logger level="trace" name="s2" additivity="false">
     <appender-ref ref="console"/>
   </logger>
 

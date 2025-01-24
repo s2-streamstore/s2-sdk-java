@@ -16,8 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class BearerTokenCallCredentialsTest {
 
-  @Mock
-  private CallCredentials.MetadataApplier metadataApplier;
+  @Mock private CallCredentials.MetadataApplier metadataApplier;
 
   @Test
   void shouldAddBearerTokenToMetadata() {

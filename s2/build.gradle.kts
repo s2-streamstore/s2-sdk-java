@@ -17,7 +17,7 @@ val assertJVersion = "3.24.2"
 
 dependencies {
     implementation(project(":s2-internal"))
-    
+
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")

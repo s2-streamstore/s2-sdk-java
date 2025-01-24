@@ -6,6 +6,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.stub.MetadataUtils;
+import io.grpc.stub.StreamObserver;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -18,6 +19,8 @@ import s2.types.ReadOutput;
 import s2.types.ReadRequest;
 import s2.types.ReadSessionRequest;
 import s2.v1alpha.AppendRequest;
+import s2.v1alpha.AppendSessionRequest;
+import s2.v1alpha.AppendSessionResponse;
 import s2.v1alpha.CheckTailRequest;
 import s2.v1alpha.CheckTailResponse;
 import s2.v1alpha.StreamServiceGrpc;
@@ -100,8 +103,40 @@ public class StreamClient extends BasinClient {
                 executor));
   }
 
-  public AppendSession appendSession(
-      Consumer<AppendOutput> onResponse, Consumer<Throwable> onError) {
-    return new AppendSession(this, onResponse, onError);
+  public record AppendSessionRequestStream(
+      Consumer<AppendInput> onNext, Consumer<Throwable> onError, Runnable onComplete) {}
+
+  public AppendSessionRequestStream appendSession(
+      Consumer<AppendOutput> onResponse, Consumer<Throwable> onError, Runnable onComplete) {
+    var observer =
+        this.asyncStub.appendSession(
+            new StreamObserver<AppendSessionResponse>() {
+              @Override
+              public void onNext(AppendSessionResponse value) {
+                onResponse.accept(AppendOutput.fromProto(value.getOutput()));
+              }
+
+              @Override
+              public void onError(Throwable t) {
+                onError.accept(t);
+              }
+
+              @Override
+              public void onCompleted() {
+                onComplete.run();
+              }
+            });
+    return new AppendSessionRequestStream(
+        appendInput ->
+            observer.onNext(
+                AppendSessionRequest.newBuilder()
+                    .setInput(appendInput.toProto(this.streamName))
+                    .build()),
+        observer::onError,
+        observer::onCompleted);
+  }
+
+  public FutureAppendSession futureAppendSession() {
+    return new FutureAppendSession(this);
   }
 }

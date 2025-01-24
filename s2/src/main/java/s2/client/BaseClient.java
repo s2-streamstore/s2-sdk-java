@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -56,8 +57,16 @@ public abstract class BaseClient implements AutoCloseable {
         t -> {
           var status = Status.fromThrowable(t);
           if (remainingAttempts > 0 && retryableStatus(status)) {
-            logger.debug("retrying err={}, remainingAttempts={}", t, remainingAttempts);
-            return withStaticRetries(remainingAttempts - 1, op);
+            var delay = (int) Math.pow(500.0, (1.0 / (double) remainingAttempts));
+            logger.debug(
+                "retrying err={} after {} ms delay, remainingAttempts={}",
+                status.getCode(),
+                delay,
+                remainingAttempts);
+            return Futures.scheduleAsync(
+                () -> withStaticRetries(remainingAttempts - 1, op),
+                Duration.ofMillis(delay),
+                this.executor);
           } else {
             return Futures.immediateFailedFuture(t);
           }

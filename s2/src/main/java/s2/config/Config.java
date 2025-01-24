@@ -11,6 +11,7 @@ public class Config {
   public final Integer maxRetries;
   public final Duration requestTimeout;
   public final AppendRetryPolicy appendRetryPolicy;
+  public final Integer maxAppendInflightBytes;
 
   private Config(
       String token,
@@ -18,13 +19,15 @@ public class Config {
       String userAgent,
       Integer maxRetries,
       Duration requestTimeout,
-      AppendRetryPolicy appendRetryPolicy) {
+      AppendRetryPolicy appendRetryPolicy,
+      Integer maxAppendInflightBytes) {
     this.token = token;
     this.endpoints = endpoints;
     this.userAgent = userAgent;
     this.maxRetries = maxRetries;
     this.requestTimeout = requestTimeout;
     this.appendRetryPolicy = appendRetryPolicy;
+    this.maxAppendInflightBytes = maxAppendInflightBytes;
   }
 
   public static ConfigBuilder newBuilder(String token) {
@@ -38,6 +41,7 @@ public class Config {
     private Optional<Duration> requestTimeout = Optional.empty();
     private Optional<Integer> maxRetries = Optional.empty();
     private Optional<AppendRetryPolicy> appendRetryPolicy = Optional.empty();
+    private Optional<Integer> maxAppendInflightBytes = Optional.empty();
 
     ConfigBuilder(String token) {
       this.token = token;
@@ -68,6 +72,11 @@ public class Config {
       return this;
     }
 
+    public ConfigBuilder withMaxAppendInflightBytes(int maxAppendInflightBytes) {
+      this.maxAppendInflightBytes = Optional.of(maxAppendInflightBytes);
+      return this;
+    }
+
     public Config build() {
       validate();
       return new Config(
@@ -76,7 +85,8 @@ public class Config {
           this.userAgent.orElse("s2-sdk-java"),
           this.maxRetries.orElse(3),
           this.requestTimeout.orElse(Duration.ofSeconds(10)),
-          this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL));
+          this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL),
+          this.maxAppendInflightBytes.orElse(Integer.MAX_VALUE));
     }
 
     private void validate() {
@@ -91,6 +101,13 @@ public class Config {
           requestTimeout -> {
             if (requestTimeout.isNegative()) {
               throw new IllegalArgumentException("requestTimeout must be a positive duration");
+            }
+          });
+
+      this.maxAppendInflightBytes.ifPresent(
+          bytes -> {
+            if (bytes < 0) {
+              throw new IllegalArgumentException("bytes must be a positive integer");
             }
           });
     }

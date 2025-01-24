@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,13 +99,16 @@ public class ReadSession {
         Throwable.class,
         t -> {
           var status = Status.fromThrowable(t);
-          if (remainingAttempts.getAndDecrement() > 0
+          var currentRemainingAttempts = remainingAttempts.getAndDecrement();
+          if (currentRemainingAttempts > 0
               && BaseClient.retryableStatus(status)
               && !this.hasCompleted.get()) {
-            logger.debug("readSession retrying, status={}", status);
-            return retrying();
+            var delay = (int) Math.pow(500.0, (1.0 / (double) currentRemainingAttempts));
+            logger.warn(
+                "readSession retrying after {} ms delay, status={}", delay, status.getCode());
+            return Futures.scheduleAsync(this::retrying, Duration.ofMillis(delay), this.executor);
           } else {
-            logger.debug("readSession failed, status={}", status);
+            logger.warn("readSession failed, status={}", status.getCode());
             onError.accept(t);
             return Futures.immediateFuture(null);
           }
