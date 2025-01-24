@@ -56,7 +56,6 @@ public class FutureAppendSessionDemo {
             .withAppendRetryPolicy(AppendRetryPolicy.NO_SIDE_EFFECTS)
             .build();
 
-    logger.info("test hello");
     LinkedBlockingQueue<ListenableFuture<AppendOutput>> futs = new LinkedBlockingQueue<>();
 
     var executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());

@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import s2.config.AppendRetryPolicy;
 import s2.types.AppendInput;
 import s2.types.AppendOutput;
 import s2.v1alpha.AppendSessionRequest;
@@ -83,7 +84,9 @@ public class FutureAppendSession {
         err -> {
           var status = Status.fromThrowable(err);
           var currentRemainingAttempts = this.remainingAttempts.getAndDecrement();
-          if (BaseClient.retryableStatus(status) && currentRemainingAttempts > 0) {
+          if (client.config.appendRetryPolicy == AppendRetryPolicy.ALL
+              && BaseClient.retryableStatus(status)
+              && currentRemainingAttempts > 0) {
             var delay = (int) Math.pow(500.0, (1.0 / (double) currentRemainingAttempts));
             logger.debug(
                 "Retrying error with (original err={}) status={}, after {} ms delay.",
