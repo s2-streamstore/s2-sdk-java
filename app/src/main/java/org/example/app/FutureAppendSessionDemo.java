@@ -51,9 +51,10 @@ public class FutureAppendSessionDemo {
     var config =
         Config.newBuilder(System.getenv("S2_AUTH_TOKEN"))
             .withEndpoints(endpoint)
-            .withMaxRetries(3)
-            .withRequestTimeout(5000, ChronoUnit.MILLIS)
-            .withAppendRetryPolicy(AppendRetryPolicy.NO_SIDE_EFFECTS)
+            .withMaxRetries(10)
+            .withRequestTimeout(10000, ChronoUnit.MILLIS)
+            .withMaxAppendInflightBytes(1024 * 1024 * 5)
+            .withAppendRetryPolicy(AppendRetryPolicy.ALL)
             .build();
 
     LinkedBlockingQueue<ListenableFuture<AppendOutput>> futs = new LinkedBlockingQueue<>();
@@ -85,11 +86,11 @@ public class FutureAppendSessionDemo {
 
     try (var client = new AccountClient(config)) {
 
-      var streamClient = client.basinClient("java-test").streamClient("t7");
+      var streamClient = client.basinClient("java-test").streamClient("t9");
 
       var futureAppendSession = streamClient.futureAppendSession();
 
-      for (var i = 0; i < 1000; i++) {
+      for (var i = 0; i < 1000000; i++) {
         try {
           var payload = RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024);
           var myFut =
@@ -101,12 +102,12 @@ public class FutureAppendSessionDemo {
                                   .withBytes(ByteString.copyFromUtf8(payload))
                                   .build()))
                       .build(),
-                  Duration.ofMillis(10000));
+                  Duration.ofMillis(60000));
 
           logger.debug("adding fut for {}", i);
           futs.add(myFut);
         } catch (RuntimeException e) {
-          logger.error(e.getMessage(), e);
+          logger.error("producer fatal" + e);
           futs.add(Futures.immediateFailedFuture(e));
           break;
         }
@@ -114,7 +115,13 @@ public class FutureAppendSessionDemo {
 
       futs.add(Futures.immediateFuture(null));
 
-      futureAppendSession.closeGracefully().get();
+      logger.info("starting close");
+      try {
+        futureAppendSession.closeGracefully().get();
+      } catch (Exception e) {
+        logger.info("caught exception", e);
+      }
+      logger.info("finished closing");
     }
 
     thatsIt.get();

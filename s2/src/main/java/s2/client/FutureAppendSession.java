@@ -200,7 +200,9 @@ public class FutureAppendSession {
                           .asRuntimeException());
 
       final Notification notification =
-          nanosToWait > 0 ? this.notificationQueue.poll(nanosToWait, TimeUnit.NANOSECONDS) : null;
+          nanosToWait > 0
+              ? recoveryNotificationQueue.poll(nanosToWait, TimeUnit.NANOSECONDS)
+              : null;
       if (notification == null) {
         throw Status.CANCELLED
             .withDescription("hit deadline while retransmitting")
