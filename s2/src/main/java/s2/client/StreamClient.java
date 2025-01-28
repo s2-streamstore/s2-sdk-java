@@ -82,6 +82,10 @@ public class StreamClient extends BasinClient {
     return new ReadSession(this, request, onResponse, onError);
   }
 
+  public BufferedReadSession bufferedReadSession(ReadSessionRequest request) {
+    return new BufferedReadSession(this, request);
+  }
+
   public ListenableFuture<AppendOutput> append(AppendInput request) {
     return withTimeout(
         () ->
