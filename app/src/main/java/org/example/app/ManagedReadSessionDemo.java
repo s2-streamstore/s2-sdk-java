@@ -11,7 +11,7 @@ import s2.types.Batch;
 import s2.types.ReadLimit;
 import s2.types.ReadSessionRequest;
 
-public class BufferedReadSessionDemo {
+public class ManagedReadSessionDemo {
 
   private static final Logger logger = LoggerFactory.getLogger(ReadSessionDemo.class.getName());
 

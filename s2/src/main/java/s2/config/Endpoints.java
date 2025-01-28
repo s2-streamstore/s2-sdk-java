@@ -16,6 +16,13 @@ public final class Endpoints {
     return new Endpoints(endpoint, new Direct(endpoint));
   }
 
+  public static Endpoints fromEnvironment() {
+    return manual(
+        Optional.ofNullable(System.getenv("S2_CLOUD")),
+        Optional.ofNullable(System.getenv("S2_ACCOUNT_ENDPOINT")),
+        Optional.ofNullable(System.getenv("S2_BASIN_ENDPOINT")));
+  }
+
   public static Endpoints manual(
       Optional<String> cloud, Optional<String> accountEndpoint, Optional<String> basinEndpoint) {
     var actualCloud = cloud.map(Cloud::fromString).orElse(Cloud.AWS);
@@ -32,13 +39,6 @@ public final class Endpoints {
         });
 
     return endpoints;
-  }
-
-  public static Endpoints fromEnvironment() {
-    return manual(
-        Optional.ofNullable(System.getenv("S2_CLOUD")),
-        Optional.ofNullable(System.getenv("S2_ACCOUNT_ENDPOINT")),
-        Optional.ofNullable(System.getenv("S2_BASIN_ENDPOINT")));
   }
 
   public static Endpoints forCloud(Cloud cloud) {

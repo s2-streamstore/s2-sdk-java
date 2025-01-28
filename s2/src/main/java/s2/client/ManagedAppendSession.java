@@ -26,31 +26,9 @@ import s2.v1alpha.AppendSessionResponse;
 
 public class ManagedAppendSession {
 
-  record InflightRecord(
-      AppendInput input,
-      Long entryNanos,
-      SettableFuture<AppendOutput> callback,
-      Long meteredBytes) {
-    static InflightRecord construct(AppendInput input, Long meteredBytes) {
-      return new InflightRecord(input, System.nanoTime(), SettableFuture.create(), meteredBytes);
-    }
-  }
-
+  static final int ACQUIRE_QUANTUM_MS = 50;
   private static final Logger logger =
       LoggerFactory.getLogger(ManagedAppendSession.class.getName());
-
-  sealed interface Notification permits Ack, Batch, ClientClose, Error, ServerClose {}
-
-  record Batch(InflightRecord input) implements Notification {}
-
-  record Ack(AppendOutput output) implements Notification {}
-
-  record Error(Throwable throwable) implements Notification {}
-
-  record ClientClose(boolean gracefully) implements Notification {}
-
-  record ServerClose() implements Notification {}
-
   final ListeningScheduledExecutorService executor;
   final StreamClient client;
   final Integer bufferCapacityBytes;
@@ -59,11 +37,7 @@ public class ManagedAppendSession {
   final AtomicInteger remainingAttempts;
   final AtomicReference<Optional<Long>> nextDeadlineSystemNanos =
       new AtomicReference<>(Optional.empty());
-
-  static final int ACQUIRE_QUANTUM_MS = 50;
-
   final AtomicBoolean acceptingAppends = new AtomicBoolean(true);
-
   // TODO can use theoretical max for smallest possible batch sizes given inflightBytes budget to
   // bound queue sizes
   final LinkedBlockingQueue<InflightRecord> inflightQueue = new LinkedBlockingQueue<>();
@@ -104,6 +78,18 @@ public class ManagedAppendSession {
         this.executor);
   }
 
+  public ListenableFuture<AppendOutput> submit(AppendInput input, Duration maxWait)
+      throws InterruptedException {
+    long meteredBytes = input.meteredBytes();
+    if (!acquirePermits((int) meteredBytes, maxWait)) {
+      throw new RuntimeException("Unable to acquire permits within deadline.");
+    }
+    var record = InflightRecord.construct(input, meteredBytes);
+    this.notificationQueue.put(new Batch(record));
+
+    return record.callback;
+  }
+
   private boolean acquirePermits(int permits, Duration maxWait) throws InterruptedException {
     var millisToWait = maxWait.toMillis();
     do {
@@ -127,19 +113,6 @@ public class ManagedAppendSession {
       throw new RuntimeException("AppendSession has been shutdown.");
     }
     return true;
-  }
-
-  public ListenableFuture<AppendOutput> submit(AppendInput input, Duration maxWait)
-      throws InterruptedException {
-    // TODO maxWait should be capped
-    long meteredBytes = input.meteredBytes();
-    if (!acquirePermits((int) meteredBytes, maxWait)) {
-      throw new RuntimeException("Unable to acquire permits within deadline.");
-    }
-    var record = InflightRecord.construct(input, meteredBytes);
-    this.notificationQueue.put(new Batch(record));
-
-    return record.callback;
   }
 
   public ListenableFuture<Void> closeGracefully() throws InterruptedException {
@@ -373,4 +346,26 @@ public class ManagedAppendSession {
     }
     return null;
   }
+
+  sealed interface Notification permits Ack, Batch, ClientClose, Error, ServerClose {}
+
+  record InflightRecord(
+      AppendInput input,
+      Long entryNanos,
+      SettableFuture<AppendOutput> callback,
+      Long meteredBytes) {
+    static InflightRecord construct(AppendInput input, Long meteredBytes) {
+      return new InflightRecord(input, System.nanoTime(), SettableFuture.create(), meteredBytes);
+    }
+  }
+
+  record Batch(InflightRecord input) implements Notification {}
+
+  record Ack(AppendOutput output) implements Notification {}
+
+  record Error(Throwable throwable) implements Notification {}
+
+  record ClientClose(boolean gracefully) implements Notification {}
+
+  record ServerClose() implements Notification {}
 }

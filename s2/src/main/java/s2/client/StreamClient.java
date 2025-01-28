@@ -108,9 +108,6 @@ public class StreamClient extends BasinClient {
                 executor));
   }
 
-  public record AppendSessionRequestStream(
-      Consumer<AppendInput> onNext, Consumer<Throwable> onError, Runnable onComplete) {}
-
   public AppendSessionRequestStream appendSession(
       Consumer<AppendOutput> onResponse, Consumer<Throwable> onError, Runnable onComplete) {
     var observer =
@@ -144,4 +141,7 @@ public class StreamClient extends BasinClient {
   public ManagedAppendSession managedAppendSession() {
     return new ManagedAppendSession(this);
   }
+
+  public record AppendSessionRequestStream(
+      Consumer<AppendInput> onNext, Consumer<Throwable> onError, Runnable onComplete) {}
 }

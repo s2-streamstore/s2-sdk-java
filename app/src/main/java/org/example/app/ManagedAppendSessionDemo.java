@@ -20,7 +20,7 @@ import s2.types.AppendInput;
 import s2.types.AppendOutput;
 import s2.types.AppendRecord;
 
-public class FutureAppendSessionDemo {
+public class ManagedAppendSessionDemo {
 
   static class RandomASCIIStringGenerator {
     private static final String ASCII_PRINTABLE_CHARACTERS =
@@ -44,7 +44,7 @@ public class FutureAppendSessionDemo {
   }
 
   private static final Logger logger =
-      LoggerFactory.getLogger(FutureAppendSessionDemo.class.getName());
+      LoggerFactory.getLogger(ManagedAppendSessionDemo.class.getName());
 
   public static void main(String[] args) throws Exception {
     var endpoint = Endpoints.fromEnvironment();

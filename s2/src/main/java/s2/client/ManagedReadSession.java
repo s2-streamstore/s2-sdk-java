@@ -12,14 +12,6 @@ import s2.types.ReadSessionRequest;
 
 public class ManagedReadSession {
 
-  private sealed interface ReadItem permits DataItem, ErrorItem, EndItem {}
-
-  record DataItem(ReadOutput readOutput) implements ReadItem {}
-
-  record ErrorItem(Throwable error) implements ReadItem {}
-
-  record EndItem() implements ReadItem {}
-
   private final Semaphore bufferAvailable;
   private final LinkedBlockingQueue<ReadItem> queue;
   private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -74,6 +66,10 @@ public class ManagedReadSession {
     return true;
   }
 
+  public Optional<ReadOutput> get() {
+    return getInner(Optional.ofNullable(queue.poll()));
+  }
+
   private Optional<ReadOutput> getInner(Optional<ReadItem> readItem) {
     var nextRead =
         readItem.flatMap(
@@ -92,11 +88,15 @@ public class ManagedReadSession {
     return nextRead;
   }
 
-  public Optional<ReadOutput> get() {
-    return getInner(Optional.ofNullable(queue.poll()));
-  }
-
   public Optional<ReadOutput> get(Duration maxWait) throws InterruptedException {
     return getInner(Optional.ofNullable(queue.poll(maxWait.toMillis(), TimeUnit.MILLISECONDS)));
   }
+
+  private sealed interface ReadItem permits DataItem, ErrorItem, EndItem {}
+
+  record DataItem(ReadOutput readOutput) implements ReadItem {}
+
+  record ErrorItem(Throwable error) implements ReadItem {}
+
+  record EndItem() implements ReadItem {}
 }
