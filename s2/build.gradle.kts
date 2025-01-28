@@ -59,6 +59,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 publishing {
@@ -66,6 +68,7 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifactId = "s2-sdk"
+
             pom {
                 name.set("S2 SDK for Java")
                 url.set("https://github.com/s2-streamstore/s2-sdk-java") // Replace with your repository URL
