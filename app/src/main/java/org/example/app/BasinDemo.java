@@ -2,7 +2,7 @@ package org.example.app;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.AccountClient;
+import s2.client.Client;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.CreateStreamRequest;
@@ -19,7 +19,7 @@ public class BasinDemo {
             .withEndpoints(Endpoints.fromEnvironment())
             .build();
 
-    try (var client = new AccountClient(config)) {
+    try (var client = new Client(config)) {
 
       var basinClient = client.basinClient("java-test");
       var streams = basinClient.listStreams(ListStreamsRequest.newBuilder().build()).get();

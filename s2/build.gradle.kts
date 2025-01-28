@@ -4,6 +4,9 @@ plugins {
     id("net.researchgate.release") version "3.1.0"
 }
 
+group = "dev.s2"
+version = project.rootProject.property("version") as String
+
 repositories {
     mavenCentral()
 }
@@ -21,11 +24,10 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
-
     implementation("javax.annotation:javax.annotation-api:$javaxAnnotationVersion")
-
     implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("org.slf4j:slf4j-api:1.7.32")
+
     compileOnly("org.apache.tomcat:tomcat-annotations-api:$tomcatAnnotationsVersion")
 
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
@@ -64,6 +66,17 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
+            artifactId = "s2-sdk"
+            pom {
+                name.set("S2 SDK for Java")
+                url.set("https://github.com/s2-streamstore/s2-sdk-java") // Replace with your repository URL
+                licenses {
+                    license {
+                        name.set("Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+            }
         }
         repositories {
             maven {

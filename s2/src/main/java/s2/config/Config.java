@@ -9,6 +9,7 @@ public class Config {
   public final Endpoints endpoints;
   public final String userAgent;
   public final Integer maxRetries;
+  public final Duration retryDelay;
   public final Duration requestTimeout;
   public final AppendRetryPolicy appendRetryPolicy;
   public final Integer maxAppendInflightBytes;
@@ -18,6 +19,7 @@ public class Config {
       Endpoints endpoints,
       String userAgent,
       Integer maxRetries,
+      Duration retryDelay,
       Duration requestTimeout,
       AppendRetryPolicy appendRetryPolicy,
       Integer maxAppendInflightBytes) {
@@ -25,6 +27,7 @@ public class Config {
     this.endpoints = endpoints;
     this.userAgent = userAgent;
     this.maxRetries = maxRetries;
+    this.retryDelay = retryDelay;
     this.requestTimeout = requestTimeout;
     this.appendRetryPolicy = appendRetryPolicy;
     this.maxAppendInflightBytes = maxAppendInflightBytes;
@@ -40,6 +43,7 @@ public class Config {
     private Optional<Endpoints> endpoints = Optional.empty();
     private Optional<Duration> requestTimeout = Optional.empty();
     private Optional<Integer> maxRetries = Optional.empty();
+    private Optional<Duration> retryDelay = Optional.empty();
     private Optional<AppendRetryPolicy> appendRetryPolicy = Optional.empty();
     private Optional<Integer> maxAppendInflightBytes = Optional.empty();
 
@@ -59,6 +63,11 @@ public class Config {
 
     public ConfigBuilder withMaxRetries(int retries) {
       this.maxRetries = Optional.of(retries);
+      return this;
+    }
+
+    public ConfigBuilder withRetryDelay(Duration delay) {
+      this.retryDelay = Optional.of(delay);
       return this;
     }
 
@@ -84,6 +93,7 @@ public class Config {
           this.endpoints.orElse(Endpoints.forCloud(Cloud.AWS)),
           this.userAgent.orElse("s2-sdk-java"),
           this.maxRetries.orElse(3),
+          this.retryDelay.orElse(Duration.ofMillis(50)),
           this.requestTimeout.orElse(Duration.ofSeconds(10)),
           this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL),
           this.maxAppendInflightBytes.orElse(Integer.MAX_VALUE));

@@ -1,10 +1,11 @@
 package s2.types;
 
 import com.google.protobuf.ByteString;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
-public class AppendInput implements MeteredBytes {
+public class AppendInput implements MeteredBytes, Serializable {
   public final List<AppendRecord> records;
   public final Optional<Long> matchSeqNum;
   public final Optional<ByteString> fencingToken;

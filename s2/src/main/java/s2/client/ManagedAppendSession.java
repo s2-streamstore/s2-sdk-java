@@ -24,7 +24,7 @@ import s2.types.AppendOutput;
 import s2.v1alpha.AppendSessionRequest;
 import s2.v1alpha.AppendSessionResponse;
 
-public class FutureAppendSession {
+public class ManagedAppendSession {
 
   record InflightRecord(
       AppendInput input,
@@ -36,7 +36,8 @@ public class FutureAppendSession {
     }
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(FutureAppendSession.class.getName());
+  private static final Logger logger =
+      LoggerFactory.getLogger(ManagedAppendSession.class.getName());
 
   sealed interface Notification permits Ack, Batch, ClientClose, Error, ServerClose {}
 
@@ -68,7 +69,7 @@ public class FutureAppendSession {
   final LinkedBlockingQueue<InflightRecord> inflightQueue = new LinkedBlockingQueue<>();
   final LinkedBlockingQueue<Notification> notificationQueue = new LinkedBlockingQueue<>();
 
-  FutureAppendSession(StreamClient client) {
+  ManagedAppendSession(StreamClient client) {
     this.executor = MoreExecutors.listeningDecorator(client.executor);
     this.client = client;
     this.daemon = retryingDaemon();
@@ -87,14 +88,13 @@ public class FutureAppendSession {
           if (client.config.appendRetryPolicy == AppendRetryPolicy.ALL
               && BaseClient.retryableStatus(status)
               && currentRemainingAttempts > 0) {
-            var delay = (int) Math.pow(500.0, (1.0 / (double) currentRemainingAttempts));
             logger.debug(
-                "Retrying error with (original err={}) status={}, after {} ms delay.",
+                "Retrying error with (original err={}) status={}, after {} delay.",
                 err,
                 status,
-                delay);
+                client.config.retryDelay);
             return Futures.scheduleAsync(
-                this::retryingDaemon, Duration.ofMillis(delay), this.executor);
+                this::retryingDaemon, client.config.retryDelay, this.executor);
           } else {
             logger.warn(
                 "Not retrying error with status={}. Cleaning up append session.", status.getCode());
@@ -231,6 +231,7 @@ public class FutureAppendSession {
 
   private synchronized Void cleanUp(Status fatal) throws InterruptedException {
     this.acceptingAppends.set(false);
+    this.inflightBytes.drainPermits();
 
     // Cancel all inflight entrants using the throwable.
     while (!inflightQueue.isEmpty()) {

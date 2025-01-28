@@ -16,24 +16,29 @@ public final class Endpoints {
     return new Endpoints(endpoint, new Direct(endpoint));
   }
 
-  public static Endpoints fromEnvironment() {
-    var cloud =
-        Optional.ofNullable(System.getenv("S2_CLOUD")).map(Cloud::fromString).orElse(Cloud.AWS);
-    var endpoints = Endpoints.forCloud(cloud);
-    Optional.ofNullable(System.getenv("S2_ACCOUNT_ENDPOINT"))
-        .ifPresent(endpoint -> endpoints.account = Address.fromString(endpoint));
-    Optional.ofNullable(System.getenv("S2_BASIN_ENDPOINT"))
-        .ifPresent(
-            endpoint -> {
-              if (endpoint.startsWith("{basin}.")) {
-                endpoints.basin =
-                    new ParentZone(Address.fromString(endpoint.substring("{basin}.".length())));
-              } else {
-                endpoints.basin = new Direct(Address.fromString(endpoint));
-              }
-            });
+  public static Endpoints manual(
+      Optional<String> cloud, Optional<String> accountEndpoint, Optional<String> basinEndpoint) {
+    var actualCloud = cloud.map(Cloud::fromString).orElse(Cloud.AWS);
+    var endpoints = Endpoints.forCloud(actualCloud);
+    accountEndpoint.ifPresent(endpoint -> endpoints.account = Address.fromString(endpoint));
+    basinEndpoint.ifPresent(
+        endpoint -> {
+          if (endpoint.startsWith("{basin}.")) {
+            endpoints.basin =
+                new ParentZone(Address.fromString(endpoint.substring("{basin}.".length())));
+          } else {
+            endpoints.basin = new Direct(Address.fromString(endpoint));
+          }
+        });
 
     return endpoints;
+  }
+
+  public static Endpoints fromEnvironment() {
+    return manual(
+        Optional.ofNullable(System.getenv("S2_CLOUD")),
+        Optional.ofNullable(System.getenv("S2_ACCOUNT_ENDPOINT")),
+        Optional.ofNullable(System.getenv("S2_BASIN_ENDPOINT")));
   }
 
   public static Endpoints forCloud(Cloud cloud) {

@@ -10,6 +10,7 @@ import io.grpc.stub.MetadataUtils;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
@@ -24,21 +25,33 @@ import s2.v1alpha.AccountServiceGrpc;
 import s2.v1alpha.DeleteBasinRequest;
 import s2.v1alpha.GetBasinConfigRequest;
 
-public class AccountClient extends BaseClient {
+public class Client extends BaseClient {
 
-  private static final Logger logger = LoggerFactory.getLogger(AccountClient.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(Client.class.getName());
   private final AccountServiceGrpc.AccountServiceFutureStub futureStub;
 
-  public AccountClient(Config config) {
+  public Client(Config config) {
     this(
         config,
         ManagedChannelBuilder.forAddress(
                 config.endpoints.account.host, config.endpoints.account.port)
             .build(),
-        Executors.newSingleThreadScheduledExecutor());
+        Executors.newScheduledThreadPool(
+            Runtime.getRuntime().availableProcessors(),
+            new ThreadFactory() {
+              private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+
+              @Override
+              public Thread newThread(Runnable r) {
+                Thread thread = defaultFactory.newThread(r);
+                thread.setDaemon(true);
+                thread.setName("S2Client-" + thread.getId());
+                return thread;
+              }
+            }));
   }
 
-  public AccountClient(Config config, ManagedChannel channel, ScheduledExecutorService executor) {
+  public Client(Config config, ManagedChannel channel, ScheduledExecutorService executor) {
     super(config, channel, executor);
     this.futureStub =
         AccountServiceGrpc.newFutureStub(channel)

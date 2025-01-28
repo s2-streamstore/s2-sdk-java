@@ -3,7 +3,7 @@ package org.example.app;
 import java.time.temporal.ChronoUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.AccountClient;
+import s2.client.Client;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.Batch;
@@ -23,7 +23,7 @@ public class ReadSessionDemo {
             .withMaxRetries(3)
             .withRequestTimeout(10000, ChronoUnit.MILLIS)
             .build();
-    try (var client = new AccountClient(config)) {
+    try (var client = new Client(config)) {
 
       var streamClient = client.basinClient("java-test").streamClient("t4");
 

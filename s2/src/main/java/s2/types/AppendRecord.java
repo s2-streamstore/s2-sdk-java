@@ -1,17 +1,18 @@
 package s2.types;
 
 import com.google.protobuf.ByteString;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AppendRecord implements MeteredBytes {
+public class AppendRecord implements MeteredBytes, Serializable {
 
   private final List<Header> headers;
-  private final ByteString bytes;
+  private final byte[] bytes;
 
   // Private constructor to prevent direct instantiation
-  private AppendRecord(List<Header> headers, ByteString bytes) {
+  private AppendRecord(List<Header> headers, byte[] bytes) {
     this.headers = headers;
     this.bytes = bytes;
   }
@@ -25,7 +26,7 @@ public class AppendRecord implements MeteredBytes {
     return headers;
   }
 
-  public ByteString getBytes() {
+  public byte[] getBytes() {
     return bytes;
   }
 
@@ -34,20 +35,20 @@ public class AppendRecord implements MeteredBytes {
     return 8
         + (2L * this.headers.size())
         + this.headers.stream().map(h -> h.name().size() + h.value().size()).reduce(0, Integer::sum)
-        + this.bytes.size();
+        + this.bytes.length;
   }
 
   public s2.v1alpha.AppendRecord toProto() {
     return s2.v1alpha.AppendRecord.newBuilder()
         .addAllHeaders(() -> this.headers.stream().map(Header::toProto).iterator())
-        .setBody(this.bytes)
+        .setBody(ByteString.copyFrom(this.bytes))
         .build();
   }
 
   // Builder class for constructing AppendRecord
   public static class AppendRecordBuilder {
     private Optional<List<Header>> headers = Optional.empty();
-    private Optional<ByteString> bytes = Optional.empty();
+    private Optional<byte[]> bytes = Optional.empty();
 
     // Set the headers with validation (if needed)
     public AppendRecordBuilder withHeaders(List<Header> headers) {
@@ -56,7 +57,7 @@ public class AppendRecord implements MeteredBytes {
     }
 
     // Set the bytes with validation (if needed)
-    public AppendRecordBuilder withBytes(ByteString bytes) {
+    public AppendRecordBuilder withBytes(byte[] bytes) {
       this.bytes = Optional.of(bytes);
       return this;
     }
@@ -64,7 +65,7 @@ public class AppendRecord implements MeteredBytes {
     // Build the AppendRecord with optional validation before returning
     public AppendRecord build() {
       List<Header> validatedHeaders = headers.orElse(new ArrayList<>());
-      ByteString validatedBytes = bytes.orElse(ByteString.EMPTY);
+      byte[] validatedBytes = bytes.orElse(new byte[0]);
 
       // Example validation: check that the headers are not empty or that bytes are not empty
       var provisional = new AppendRecord(validatedHeaders, validatedBytes);

@@ -3,7 +3,7 @@ package org.example.app;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.ByteString;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.AccountClient;
+import s2.client.Client;
 import s2.config.AppendRetryPolicy;
 import s2.config.Config;
 import s2.config.Endpoints;
@@ -84,13 +84,13 @@ public class FutureAppendSessionDemo {
             },
             executor);
 
-    try (var client = new AccountClient(config)) {
+    try (var client = new Client(config)) {
 
       var streamClient = client.basinClient("java-test").streamClient("t9");
 
-      var futureAppendSession = streamClient.futureAppendSession();
+      var futureAppendSession = streamClient.managedAppendSession();
 
-      for (var i = 0; i < 1000000; i++) {
+      for (var i = 0; i < 10000; i++) {
         try {
           var payload = RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024);
           var myFut =
@@ -99,7 +99,7 @@ public class FutureAppendSessionDemo {
                       .withRecords(
                           List.of(
                               AppendRecord.newBuilder()
-                                  .withBytes(ByteString.copyFromUtf8(payload))
+                                  .withBytes(payload.getBytes(StandardCharsets.UTF_8))
                                   .build()))
                       .build(),
                   Duration.ofMillis(60000));

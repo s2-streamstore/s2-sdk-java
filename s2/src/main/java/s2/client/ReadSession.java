@@ -7,7 +7,6 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -29,7 +28,6 @@ public class ReadSession {
   final Consumer<ReadOutput> onResponse;
   final Consumer<Throwable> onError;
   final ReadSessionRequest request;
-  final AtomicBoolean hasCompleted = new AtomicBoolean(false);
   final AtomicInteger remainingAttempts;
   final ListenableFuture<Void> daemon;
 
@@ -52,29 +50,25 @@ public class ReadSession {
       ReadSessionRequest updatedRequest, Consumer<ReadOutput> innerOnResponse) {
 
     SettableFuture<Void> fut = SettableFuture.create();
+
     this.client.asyncStub.readSession(
         updatedRequest.toProto(this.client.streamName),
         new StreamObserver<ReadSessionResponse>() {
 
           @Override
           public void onNext(ReadSessionResponse value) {
-            if (hasCompleted.get()) {
-              logger.info("Read session onNext but hasCompleted.");
-              fut.set(null);
-            } else {
-              innerOnResponse.accept(ReadOutput.fromProto(value.getOutput()));
-            }
+            innerOnResponse.accept(ReadOutput.fromProto(value.getOutput()));
           }
 
           @Override
           public void onError(Throwable t) {
-            logger.info("Read session onError={}", t.toString());
+            logger.debug("Read session onError={}", t.toString());
             fut.setException(t);
           }
 
           @Override
           public void onCompleted() {
-            logger.info("Read session inner onCompleted");
+            logger.debug("Read session inner onCompleted");
             fut.set(null);
           }
         });
@@ -100,13 +94,12 @@ public class ReadSession {
         t -> {
           var status = Status.fromThrowable(t);
           var currentRemainingAttempts = remainingAttempts.getAndDecrement();
-          if (currentRemainingAttempts > 0
-              && BaseClient.retryableStatus(status)
-              && !this.hasCompleted.get()) {
-            var delay = (int) Math.pow(500.0, (1.0 / (double) currentRemainingAttempts));
+          if (currentRemainingAttempts > 0 && BaseClient.retryableStatus(status)) {
             logger.warn(
-                "readSession retrying after {} ms delay, status={}", delay, status.getCode());
-            return Futures.scheduleAsync(this::retrying, Duration.ofMillis(delay), this.executor);
+                "readSession retrying after {} delay, status={}",
+                client.config.retryDelay,
+                status.getCode());
+            return Futures.scheduleAsync(this::retrying, client.config.retryDelay, this.executor);
           } else {
             logger.warn("readSession failed, status={}", status.getCode());
             onError.accept(t);
@@ -118,13 +111,5 @@ public class ReadSession {
 
   public ListenableFuture<Void> awaitCompletion() {
     return this.daemon;
-  }
-
-  public ListenableFuture<Void> close() {
-    if (this.hasCompleted.getAndSet(true)) {
-      return Futures.immediateFailedFuture(new RuntimeException("ReadSession already closed."));
-    } else {
-      return this.daemon;
-    }
   }
 }

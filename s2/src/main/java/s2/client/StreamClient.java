@@ -82,8 +82,9 @@ public class StreamClient extends BasinClient {
     return new ReadSession(this, request, onResponse, onError);
   }
 
-  public BufferedReadSession bufferedReadSession(ReadSessionRequest request) {
-    return new BufferedReadSession(this, request);
+  public ManagedReadSession managedReadSession(
+      ReadSessionRequest request, Integer maxBufferedBytes) {
+    return new ManagedReadSession(this, request, maxBufferedBytes);
   }
 
   public ListenableFuture<AppendOutput> append(AppendInput request) {
@@ -140,7 +141,7 @@ public class StreamClient extends BasinClient {
         observer::onCompleted);
   }
 
-  public FutureAppendSession futureAppendSession() {
-    return new FutureAppendSession(this);
+  public ManagedAppendSession managedAppendSession() {
+    return new ManagedAppendSession(this);
   }
 }

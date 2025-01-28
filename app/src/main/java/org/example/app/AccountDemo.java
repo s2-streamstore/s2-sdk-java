@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.AccountClient;
+import s2.client.Client;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.Age;
@@ -23,7 +23,7 @@ public class AccountDemo {
             .withEndpoints(Endpoints.fromEnvironment())
             .build();
 
-    try (var client = new AccountClient(config)) {
+    try (var client = new Client(config)) {
 
       var basins = client.listBasins(ListBasinsRequest.newBuilder().build()).get();
       basins.elems().forEach(basin -> logger.info("basin={}", basin));
