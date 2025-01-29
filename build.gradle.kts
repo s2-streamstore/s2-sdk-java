@@ -16,6 +16,6 @@ release {
 }
 
 
-//tasks.afterReleaseBuild {
-//    dependsOn(tasks.publish)
-//}
+tasks.named("afterReleaseBuild") {
+    dependsOn("publish")
+}
