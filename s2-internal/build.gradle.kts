@@ -72,13 +72,16 @@ publishing {
             pom {
                 name.set("Generated code for S2 SDK.")
                 description.set("Generated code and types used by the S2 SDK.")
-                url.set("https://github.com/s2-streamstore/s2-sdk-java") // Replace with your repository URL
-
+                url.set("https://github.com/s2-streamstore/s2-sdk-java")
                 licenses {
                     license {
                         name.set("Apache License, Version 2.0")
                         url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
+                }
+                scm {
+                    connection = "scm:git:git@github.com:s2-streamstore/s2-sdk-java.git"
+                    url = "https://github.com/s2-streamstore/s2-sdk-java"
                 }
             }
         }
