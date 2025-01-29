@@ -27,18 +27,19 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
 }
 
-val executables = mapOf(
-    "AccountDemo" to "org.example.app.AccountDemo",
-    "BasinDemo" to "org.example.app.BasinDemo",
-    "BufferedReadSessionDemo" to "org.example.app.BufferedReadSessionDemo",
-    "FutureAppendSessionDemo" to "org.example.app.FutureAppendSessionDemo",
-    "ReadSessionDemo" to "org.example.app.ReadSessionDemo",
+val executables = listOf(
+    "org.example.app.AccountDemo",
+    "org.example.app.BasinDemo",
+    "org.example.app.ManagedReadSessionDemo",
+    "org.example.app.ManagedAppendSessionDemo",
+    "org.example.app.ReadSessionDemo"
 )
 
-executables.forEach { name, mainClassName ->
-    tasks.register<JavaExec>("run${name}") {
+executables.forEach { mainClassName ->
+    val name = mainClassName.substringAfterLast('.')
+    tasks.register<JavaExec>("run$name") {
         group = "application"
-        description = "Run the $name executable"
+        description = "Run the $name demo app."
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set(mainClassName)
     }
