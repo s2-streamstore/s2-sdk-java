@@ -27,26 +27,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Get next version
-        uses: reecetech/version-increment@2024.10.1
-        id: version
-        with:
-          scheme: semver
-          increment: patch
-
-      # Setup git config of the GitHub Actions Bot
-      - name: Setup git config
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-
       - name: Publish to GitHub Packages
         run: |
-          ./gradlew release \
-            -Prelease.useAutomaticVersion=true \
-            -Prelease.releaseVersion=${{ steps.version.outputs.current-version }} \
-            -Prelease.releaseNewVersion="${{ steps.version.outputs.version }}-SNAPSHOT" \
-            -x preTagCommit -x createReleaseTag -x commitNewVersion
+          ./gradlew publish
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
