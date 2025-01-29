@@ -68,26 +68,29 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifactId = "s2-sdk"
-
             pom {
                 name.set("S2 SDK for Java")
-                url.set("https://github.com/s2-streamstore/s2-sdk-java") // Replace with your repository URL
+                url.set("https://github.com/s2-streamstore/s2-sdk-java")
                 licenses {
                     license {
                         name.set("Apache License, Version 2.0")
                         url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
                 }
+                scm {
+                    connection = "scm:git:git@github.com:s2-streamstore/s2-sdk-java.git"
+                    url = "https://github.com/s2-streamstore/s2-sdk-java"
+                }
             }
         }
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/s2-streamstore/s2-sdk-java")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/s2-streamstore/s2-sdk-java")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
