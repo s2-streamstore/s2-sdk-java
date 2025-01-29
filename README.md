@@ -32,6 +32,21 @@ cd s2-sdk-java
 ./gradlew publishToMavenLocal
 ```
 
+### Using Maven (with GitHub Packages)
+
+Packages listed on this repo can be downloaded from GitHub's Maven repository. This document goes
+through [the details](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry),
+but typically this involves:
+
+- Creating a new personal access token with `read:packages` permissions
+- Configuring your
+  `~/.m2/settings.xml` to look like the
+  example [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-with-a-personal-access-token)
+    - The relevant URL would be `https://maven.pkg.github.com/s2-streamstore/s2-sdk-java`
+- Adding the relevant package(s) to your project's `pom.xml` (each
+  individual [package](https://github.com/s2-streamstore/s2-sdk-java/packages/) should list the XML
+  representation of the dependency)
+
 ### Using Maven (Local Published Artifact)
 
 Add this dependency to your `pom.xml`:
