@@ -42,7 +42,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          ./gradlew s2:release \
+          ./gradlew release \
             -Prelease.useAutomaticVersion=true \
             -Prelease.releaseVersion=${{ steps.version.outputs.current-version }} \
             -Prelease.releaseNewVersion="${{ steps.version.outputs.version }}-SNAPSHOT" \
