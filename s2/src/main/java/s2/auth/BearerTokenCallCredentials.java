@@ -3,7 +3,6 @@ package s2.auth;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.Status;
-
 import java.util.concurrent.Executor;
 
 /**
@@ -41,17 +40,28 @@ public class BearerTokenCallCredentials extends CallCredentials {
    * @param metadataApplier Interface for applying the resulting metadata
    */
   @Override
-  public void applyRequestMetadata(RequestInfo requestInfo, Executor executor,
-      MetadataApplier metadataApplier) {
-    executor.execute(() -> {
-      try {
-        Metadata headers = new Metadata();
-        headers.put(AUTHORIZATION_HEADER, "Bearer " + token);
-        metadataApplier.apply(headers);
-      } catch (Throwable e) {
-        metadataApplier.fail(Status.UNAUTHENTICATED.withCause(e));
-      }
-    });
+  public void applyRequestMetadata(
+      RequestInfo requestInfo, Executor executor, MetadataApplier metadataApplier) {
+    executor.execute(
+        () -> {
+          try {
+            Metadata headers = new Metadata();
+            headers.put(AUTHORIZATION_HEADER, "Bearer " + token);
+            metadataApplier.apply(headers);
+          } catch (Throwable e) {
+            metadataApplier.fail(Status.UNAUTHENTICATED.withCause(e));
+          }
+        });
+  }
+
+  /**
+   * Returns a hash code value for this credentials implementation.
+   *
+   * @return A hash code value for this object
+   */
+  @Override
+  public int hashCode() {
+    return token.hashCode();
   }
 
   /**
@@ -70,15 +80,5 @@ public class BearerTokenCallCredentials extends CallCredentials {
       return false;
     }
     return token.equals(((BearerTokenCallCredentials) other).token);
-  }
-
-  /**
-   * Returns a hash code value for this credentials implementation.
-   *
-   * @return A hash code value for this object
-   */
-  @Override
-  public int hashCode() {
-    return token.hashCode();
   }
 }
