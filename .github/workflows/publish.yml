@@ -33,3 +33,36 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine version from release tag
+        id: get_version
+        run: |
+          RAW_VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${RAW_VERSION#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Generate JavaDoc with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew javadoc
+
+      - name: Deploy JavaDoc to gh-pages
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Fetch + switch to gh-pages branch
+          git checkout gh-pages 
+          git pull origin gh-pages
+          
+          mkdir -p "javadocs/s2/${VERSION}"
+          cp -r s2/build/docs/javadoc/* "javadocs/s2/${VERSION}"
+          
+          mkdir -p "javadocs/s2-internal/${VERSION}"
+          cp -r s2-internal/build/docs/javadoc/* "javadocs/s2-internal/${VERSION}"
+          
+          git add "javadocs/s2/${VERSION}"
+          git add "javadocs/s2-internal/${VERSION}"
+          git commit -m "Add JavaDoc for version ${VERSION}" || echo "No changes to commit"
+          
+          git push origin gh-pages
