@@ -16,7 +16,10 @@ A Java SDK for interacting with the S2 streaming service.
 1. Clone the repository:
 
 ```bash
-git clone --recurse-submodules https://github.com/s2-streamstore/s2-sdk-java 
+git clone \
+  --recurse-submodules \
+  https://github.com/s2-streamstore/s2-sdk-java 
+
 cd s2-sdk-java
 ```
 
@@ -56,7 +59,7 @@ Add this dependency to your `pom.xml`:
 <dependency>
   <groupId>dev.s2</groupId>
   <artifactId>s2-sdk</artifactId>
-  <version>0.0.5-SNAPSHOT</version>
+  <version><!--Use the current version specified in `gradle.properties`--></version>
 </dependency>
 ```
 
@@ -65,8 +68,10 @@ Add this dependency to your `pom.xml`:
 Add this dependency to your `build.gradle.kts`:
 
 ```kotlin
+// pick a version from the releases, or specified in `gradle.properties`
+var s2SdkVersion = "SOMETHING"
 dependencies {
-    implementation("dev.s2:s2-sdk:0.0.5-SNAPSHOT")
+    implementation("dev.s2:s2-sdk:$s2SdkVersion")
 }
 ```
 
@@ -77,20 +82,46 @@ dependencies {
   the [S2 protobuf definitions](https://github.com/s2-streamstore/s2-protos).
 - `app/` - Example application demonstrating SDK usage.
 
-## Running the Example App
+## Running the Example Apps
 
-1. Set required environment variables:
+The example apps contain some simple demo uses of the SDK.
+
+For all of these, you will need an S2 account. Sign up on [s2.dev](https://s2.dev/) if you haven't
+already, and generate an auth token [in the dashboard](https://s2.dev/dashboard).
+
+From there, you can use the [S2 CLI](https://github.com/s2-streamstore/s2-cli) for creating new
+basins and streams (or, try doing this using the SDK!).
+
+For the demos discussed below, it will be helpful to create a new basin and stream.
+
+Start by setting some environment variables in your shell.
 
 ```bash
-export S2_HOST=aws.s2.dev
-export S2_PORT=443
-export S2_TOKEN=your-token
+export S2_AUTH_TOKEN="MY-SECRET"
+export S2_BASIN="my-demo-java"
+export S2_STREAM="test/1"
 ```
 
-2. Run the example:
+Then, if you need to create the basin or stream, you can do so with the CLI:
 
 ```bash
-./gradlew app:run
+s2 create-basin "s2://${S2_BASIN}"
+s2 create-stream "s2://${S2_BASIN}/${S2_STREAM}"
+```
+
+### Appending and reading records
+
+Assuming you've defined those variables above, you can start a managed append session that will try
+to append 50k random records (a total of ~500MiB) to your stream:
+
+```bash
+./gradlew runManagedAppendSessionDemo
+```
+
+Similarly, you can use a managed read session to read those records:
+
+```bash
+./gradlew runManagedReadSessionDemo
 ```
 
 ## License

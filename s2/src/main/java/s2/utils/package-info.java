@@ -1,2 +1,2 @@
-/** Validation and misc. utility functions. */
+/** Validation and miscellaneous utility functions. */
 package s2.utils;

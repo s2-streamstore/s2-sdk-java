@@ -20,10 +20,24 @@ import s2.v1alpha.BasinServiceGrpc;
 import s2.v1alpha.DeleteStreamRequest;
 import s2.v1alpha.GetStreamConfigRequest;
 
+/** Client for basin-level operations. */
 public class BasinClient extends BaseClient {
-  private final String basin;
+  /** Name of basin associated with this client. */
+  final String basin;
+
   private final BasinServiceGrpc.BasinServiceFutureStub futureStub;
 
+  /**
+   * Instantiates a new Basin client.
+   *
+   * <p>Most users will prefer to use the {@link s2.client.Client#basinClient(String)} method for
+   * construction.
+   *
+   * @see s2.client.Client#basinClient
+   * @param basin the basin
+   * @param config the config
+   * @param executor the executor
+   */
   public BasinClient(String basin, Config config, ScheduledExecutorService executor) {
     this(
         basin,
@@ -32,6 +46,18 @@ public class BasinClient extends BaseClient {
         executor);
   }
 
+  /**
+   * Instantiates a new Basin client.
+   *
+   * <p>Most users will prefer to use the {@link s2.client.Client#basinClient(String)} method for
+   * construction.
+   *
+   * @see s2.client.Client#basinClient
+   * @param basin the basin
+   * @param config the config
+   * @param channel the channel
+   * @param executor the executor
+   */
   public BasinClient(
       String basin, Config config, ManagedChannel channel, ScheduledExecutorService executor) {
     super(config, channel, executor);
@@ -44,6 +70,12 @@ public class BasinClient extends BaseClient {
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
   }
 
+  /**
+   * List streams within the basin.
+   *
+   * @param listStreamsRequest the list streams request
+   * @return future of a paginated list of stream infos
+   */
   public ListenableFuture<Paginated<StreamInfo>> listStreams(
       s2.types.ListStreamsRequest listStreamsRequest) {
     return withTimeout(
@@ -59,6 +91,12 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
+  /**
+   * Create a new stream within this basin.
+   *
+   * @param createStreamRequest the create stream request
+   * @return future of the resulting stream info
+   */
   public ListenableFuture<StreamInfo> createStream(CreateStreamRequest createStreamRequest) {
     final var meta = new Metadata();
     final var token = UUID.randomUUID().toString();
@@ -76,6 +114,14 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
+  /**
+   * Delete a stream.
+   *
+   * <p>Stream deletion is asynchronous, and may take a few minutes to complete.
+   *
+   * @param streamName the stream name
+   * @return future representing the completion of this action
+   */
   public ListenableFuture<Void> deleteStream(String streamName) {
     return withTimeout(
         () ->
@@ -89,6 +135,12 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
+  /**
+   * Get current config of a stream.
+   *
+   * @param streamName the stream name
+   * @return future of the stream config
+   */
   public ListenableFuture<StreamConfig> getStreamConfig(String streamName) {
     return withTimeout(
         () ->
@@ -102,6 +154,12 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
+  /**
+   * Reconfigure an existing stream.
+   *
+   * @param reconfigureStreamRequest the reconfigure stream request
+   * @return future of the resulting stream config
+   */
   public ListenableFuture<StreamConfig> reconfigureStream(
       ReconfigureStreamRequest reconfigureStreamRequest) {
     return withTimeout(
@@ -114,6 +172,12 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
+  /**
+   * Create a StreamClient for interacting with stream-level RPCs.
+   *
+   * @param streamName the stream name
+   * @return the stream client
+   */
   public StreamClient streamClient(String streamName) {
     return new StreamClient(streamName, this.basin, this.config, this.channel, this.executor);
   }

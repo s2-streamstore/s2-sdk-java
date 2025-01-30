@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -47,53 +46,57 @@ public class ManagedAppendSessionDemo {
       LoggerFactory.getLogger(ManagedAppendSessionDemo.class.getName());
 
   public static void main(String[] args) throws Exception {
-    var endpoint = Endpoints.fromEnvironment();
+    final var authToken = System.getenv("S2_AUTH_TOKEN");
+    final var basinName = System.getenv("S2_BASIN");
+    final var streamName = System.getenv("S2_STREAM");
+    if (authToken == null) {
+      throw new IllegalStateException("S2_AUTH_TOKEN not set");
+    }
+    if (basinName == null) {
+      throw new IllegalStateException("S2_BASIN not set");
+    }
+    if (streamName == null) {
+      throw new IllegalStateException("S2_STREAM not set");
+    }
+
     var config =
-        Config.newBuilder(System.getenv("S2_AUTH_TOKEN"))
-            .withEndpoints(endpoint)
-            .withMaxRetries(10)
-            .withRequestTimeout(10000, ChronoUnit.MILLIS)
-            .withMaxAppendInflightBytes(1024 * 1024 * 5)
+        Config.newBuilder(authToken)
+            .withEndpoints(Endpoints.fromEnvironment())
+            .withMaxAppendInflightBytes(1024 * 1024 * 50)
             .withAppendRetryPolicy(AppendRetryPolicy.ALL)
             .build();
 
-    LinkedBlockingQueue<ListenableFuture<AppendOutput>> futs = new LinkedBlockingQueue<>();
+    final LinkedBlockingQueue<ListenableFuture<AppendOutput>> pendingAppends =
+        new LinkedBlockingQueue<>();
 
     var executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
-    var thatsIt =
-        Futures.catchingAsync(
-            executor.submit(
-                () -> {
-                  try {
-                    while (true) {
-                      var output = futs.take().get();
-                      if (output == null) {
-                        logger.info("consumer closing");
-                        break;
-                      }
-                      logger.info("consumer got: {}", output);
-                    }
-                  } catch (Exception e) {
-                    logger.error("consumer failed", e);
+    var consumer =
+        executor.submit(
+            () -> {
+              try {
+                while (true) {
+                  var output = pendingAppends.take().get();
+                  if (output == null) {
+                    logger.info("consumer closing");
+                    break;
                   }
-                }),
-            Throwable.class,
-            t -> {
-              logger.error("it all ended!", t);
-              return null;
-            },
-            executor);
+                  logger.info("consumer got: {}", output);
+                }
+              } catch (Exception e) {
+                logger.error("consumer failed", e);
+              }
+            });
 
     try (var client = new Client(config)) {
 
-      var streamClient = client.basinClient("java-test").streamClient("t9");
+      final var streamClient = client.basinClient(basinName).streamClient(streamName);
+      final var futureAppendSession = streamClient.managedAppendSession();
 
-      var futureAppendSession = streamClient.managedAppendSession();
-
-      for (var i = 0; i < 10000; i++) {
+      for (var i = 0; i < 50_000; i++) {
         try {
-          var payload = RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024);
-          var myFut =
+          // Generate a record with approximately 10KiB of random text.
+          var payload = RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024 * 10);
+          var append =
               futureAppendSession.submit(
                   AppendInput.newBuilder()
                       .withRecords(
@@ -102,29 +105,33 @@ public class ManagedAppendSessionDemo {
                                   .withBytes(payload.getBytes(StandardCharsets.UTF_8))
                                   .build()))
                       .build(),
-                  Duration.ofMillis(60000));
+                  // Duration is how long we are willing to wait to receive a future.
+                  Duration.ofSeconds(1));
 
-          logger.debug("adding fut for {}", i);
-          futs.add(myFut);
+          pendingAppends.add(append);
         } catch (RuntimeException e) {
-          logger.error("producer fatal" + e);
-          futs.add(Futures.immediateFailedFuture(e));
+          logger.error("producer failed", e);
+          pendingAppends.add(Futures.immediateFailedFuture(e));
           break;
         }
       }
 
-      futs.add(Futures.immediateFuture(null));
+      logger.info("finished submitting all appends");
 
-      logger.info("starting close");
+      // Signal to the consumer that no further appends are happening.
+      pendingAppends.add(Futures.immediateFuture(null));
+
+      logger.info("starting graceful close");
       try {
         futureAppendSession.closeGracefully().get();
       } catch (Exception e) {
-        logger.info("caught exception", e);
+        logger.error("caught exception during close", e);
       }
       logger.info("finished closing");
     }
 
-    thatsIt.get();
+    // Await the consumer future.
+    consumer.get();
     executor.shutdown();
   }
 }
