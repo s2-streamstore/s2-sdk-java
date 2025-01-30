@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"s2.auth"},{"l":"s2.client"},{"l":"s2.config"},{"l":"s2.types"},{"l":"s2.utils"}];updateSearchResults();
