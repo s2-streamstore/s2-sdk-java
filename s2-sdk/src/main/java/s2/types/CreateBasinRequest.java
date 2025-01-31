@@ -5,9 +5,9 @@ import s2.utils.BasinUtils;
 
 public class CreateBasinRequest {
 
-  final Optional<String> basin;
-  final BasinConfig config;
-  final Optional<BasinAssignment> assignment;
+  public final Optional<String> basin;
+  public final BasinConfig config;
+  public final Optional<BasinAssignment> assignment;
 
   private CreateBasinRequest(
       Optional<String> basin, BasinConfig config, Optional<BasinAssignment> assignment) {
@@ -27,7 +27,7 @@ public class CreateBasinRequest {
   }
 
   abstract static sealed class BasinAssignment permits Scope, Cell {
-    final String value;
+    public final String value;
 
     BasinAssignment(String value) {
       this.value = value;
@@ -35,14 +35,12 @@ public class CreateBasinRequest {
   }
 
   static final class Scope extends BasinAssignment {
-
     Scope(String value) {
       super(value);
     }
   }
 
   static final class Cell extends BasinAssignment {
-
     Cell(String value) {
       super(value);
     }

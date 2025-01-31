@@ -5,6 +5,7 @@ import java.util.Optional;
 public class ReadLimit {
 
   public static final ReadLimit NONE = new ReadLimit(Optional.empty(), Optional.empty());
+
   public final Optional<Long> count;
   public final Optional<Long> bytes;
 
@@ -13,10 +14,9 @@ public class ReadLimit {
     this.bytes = bytes;
   }
 
-  // Static factory methods for different ways to instantiate ReadLimit
   public static ReadLimit count(long count) {
     if (count < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
+      throw new IllegalArgumentException("Count must be positive");
     }
     return new ReadLimit(Optional.of(count), Optional.empty());
   }
@@ -33,7 +33,7 @@ public class ReadLimit {
       throw new IllegalArgumentException("Bytes must be positive");
     }
     if (count < 0) {
-      throw new IllegalArgumentException("Bytes must be positive");
+      throw new IllegalArgumentException("Count must be positive");
     }
     return new ReadLimit(Optional.of(count), Optional.of(bytes));
   }

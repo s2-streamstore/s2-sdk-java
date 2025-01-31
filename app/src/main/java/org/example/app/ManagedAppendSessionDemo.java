@@ -102,7 +102,7 @@ public class ManagedAppendSessionDemo {
                       .withRecords(
                           List.of(
                               AppendRecord.newBuilder()
-                                  .withBytes(payload.getBytes(StandardCharsets.UTF_8))
+                                  .withBody(payload.getBytes(StandardCharsets.UTF_8))
                                   .build()))
                       .build(),
                   // Duration is how long we are willing to wait to receive a future.

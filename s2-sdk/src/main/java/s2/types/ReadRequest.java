@@ -4,9 +4,8 @@ import java.util.Optional;
 
 public class ReadRequest {
 
-  public static final ReadRequest DEFAULT = new ReadRequest(0L, ReadLimit.NONE);
-  protected final long startSeqNum;
-  protected final ReadLimit readLimit;
+  public final long startSeqNum;
+  public final ReadLimit readLimit;
 
   protected ReadRequest(long startSeqNum, ReadLimit readLimit) {
     this.startSeqNum = startSeqNum;
@@ -26,8 +25,8 @@ public class ReadRequest {
   }
 
   public static class ReadRequestBuilder {
-    Optional<Long> startSeqNum = Optional.empty();
-    Optional<ReadLimit> readLimit = Optional.empty();
+    private Optional<Long> startSeqNum = Optional.empty();
+    private Optional<ReadLimit> readLimit = Optional.empty();
 
     public ReadRequestBuilder withStartSeqNum(long startSeqNum) {
       this.startSeqNum = Optional.of(startSeqNum);

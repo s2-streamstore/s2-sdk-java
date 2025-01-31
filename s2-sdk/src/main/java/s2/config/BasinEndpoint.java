@@ -3,7 +3,7 @@ package s2.config;
 import java.util.Objects;
 
 public abstract sealed class BasinEndpoint permits ParentZone, Direct {
-  final Address address;
+  public final Address address;
 
   BasinEndpoint(Address address) {
     this.address = address;

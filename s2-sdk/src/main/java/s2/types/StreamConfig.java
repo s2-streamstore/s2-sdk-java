@@ -38,8 +38,8 @@ public class StreamConfig {
   }
 
   public static class StreamConfigBuilder {
-    Optional<StorageClass> storageClass = Optional.empty();
-    Optional<RetentionPolicy> retentionPolicy = Optional.empty();
+    private Optional<StorageClass> storageClass = Optional.empty();
+    private Optional<RetentionPolicy> retentionPolicy = Optional.empty();
 
     public StreamConfigBuilder withStorageClass(StorageClass storageClass) {
       this.storageClass = Optional.of(storageClass);

@@ -37,8 +37,8 @@ public class ReadSessionRequest {
   }
 
   public static class ReadSessionRequestBuilder {
-    Optional<Long> startSeqNum = Optional.empty();
-    Optional<ReadLimit> readLimit = Optional.empty();
+    private Optional<Long> startSeqNum = Optional.empty();
+    private Optional<ReadLimit> readLimit = Optional.empty();
 
     public ReadSessionRequestBuilder withStartSeqNum(long startSeqNum) {
       this.startSeqNum = Optional.of(startSeqNum);

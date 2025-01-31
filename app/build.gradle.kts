@@ -18,7 +18,7 @@ repositories {
 val grpcVersion = "1.64.0"
 
 dependencies {
-    implementation(project(":s2"))
+    implementation(project(":s2-sdk"))
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("javax.annotation:javax.annotation-api:1.3.2")

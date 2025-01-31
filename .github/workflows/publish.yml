@@ -55,13 +55,13 @@ jobs:
           git checkout gh-pages 
           git pull origin gh-pages
           
-          mkdir -p "javadocs/s2/${VERSION}"
-          cp -r s2/build/docs/javadoc/* "javadocs/s2/${VERSION}"
+          mkdir -p "javadocs/s2-sdk/${VERSION}"
+          cp -r s2-sdk/build/docs/javadoc/* "javadocs/s2-sdk/${VERSION}"
           
           mkdir -p "javadocs/s2-internal/${VERSION}"
           cp -r s2-internal/build/docs/javadoc/* "javadocs/s2-internal/${VERSION}"
           
-          git add "javadocs/s2/${VERSION}"
+          git add "javadocs/s2-sdk/${VERSION}"
           git add "javadocs/s2-internal/${VERSION}"
           git commit -m "Add JavaDoc for version ${VERSION}" || echo "No changes to commit"
           
