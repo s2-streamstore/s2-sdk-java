@@ -21,7 +21,7 @@ public class BasinDemo {
 
     try (var client = new Client(config)) {
 
-      var basinClient = client.basinClient("java-test");
+      var basinClient = client.basinClient("my-first-basin");
       var streams = basinClient.listStreams(ListStreamsRequest.newBuilder().build()).get();
       streams
           .elems()
@@ -34,7 +34,7 @@ public class BasinDemo {
           basinClient
               .createStream(
                   CreateStreamRequest.newBuilder()
-                      .withStreamName("test-stream1")
+                      .withStreamName("test/1")
                       .withStreamConfig(StreamConfig.newBuilder().build())
                       .build())
               .get();

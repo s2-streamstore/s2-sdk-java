@@ -41,9 +41,6 @@ public class AccountDemo {
                       .build())
               .get();
       logger.info("newBasin={}", newBasin);
-
-      client.deleteBasin(newBasin.name()).get();
-      logger.info("deleted basin {}", newBasin);
     }
   }
 }

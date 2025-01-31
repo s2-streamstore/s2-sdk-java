@@ -13,44 +13,58 @@ import s2.types.ReadSessionRequest;
 
 public class ManagedReadSessionDemo {
 
-  private static final Logger logger = LoggerFactory.getLogger(ReadSessionDemo.class.getName());
+  private static final Logger logger =
+      LoggerFactory.getLogger(ManagedReadSessionDemo.class.getName());
 
   public static void main(String[] args) throws Exception {
-    var endpoint = Endpoints.fromEnvironment();
-    var config =
-        Config.newBuilder(System.getenv("S2_AUTH_TOKEN"))
-            .withEndpoints(endpoint)
-            .withMaxRetries(10)
-            .withRetryDelay(Duration.ofSeconds(1))
-            .build();
+
+    final var authToken = System.getenv("S2_AUTH_TOKEN");
+    final var basinName = System.getenv("S2_BASIN");
+    final var streamName = System.getenv("S2_STREAM");
+    if (authToken == null) {
+      throw new IllegalStateException("S2_AUTH_TOKEN not set");
+    }
+    if (basinName == null) {
+      throw new IllegalStateException("S2_BASIN not set");
+    }
+    if (streamName == null) {
+      throw new IllegalStateException("S2_STREAM not set");
+    }
+
+    var config = Config.newBuilder(authToken).withEndpoints(Endpoints.fromEnvironment()).build();
+
     try (var client = new Client(config)) {
 
-      var streamClient = client.basinClient("java-test").streamClient("t9");
+      var streamClient = client.basinClient(basinName).streamClient(streamName);
 
-      var buffered =
+      var managedSession =
           streamClient.managedReadSession(
-              ReadSessionRequest.newBuilder().withReadLimit(ReadLimit.count(400000)).build(),
-              1024 * 1024 * 2000);
+              ReadSessionRequest.newBuilder().withReadLimit(ReadLimit.count(100_000)).build(),
+              1024 * 1024 * 1024);
 
-      logger.info("starting");
-      AtomicLong received = new AtomicLong();
-      while (!buffered.isClosed()) {
-        var resp = buffered.get(Duration.ofSeconds(60));
+      AtomicLong receivedBytes = new AtomicLong();
+      while (!managedSession.isClosed()) {
+        // Poll for up to 1 minute.
+        var resp = managedSession.get(Duration.ofSeconds(60));
         resp.ifPresentOrElse(
-            r -> {
-              if (r instanceof Batch batch) {
+            elem -> {
+              if (elem instanceof Batch batch) {
                 var size = batch.meteredBytes();
-                logger.info("batch {}, {}..={}", size, batch.firstSeqNum(), batch.lastSeqNum());
-                received.addAndGet(size);
+                logger.info(
+                    "batch of {} bytes, seqnums {}..={}",
+                    size,
+                    batch.firstSeqNum(),
+                    batch.lastSeqNum());
+                receivedBytes.addAndGet(size);
               } else {
-                logger.info("non batch {}", r);
+                logger.info("non batch received: {}", elem);
               }
             },
             () -> {
               logger.info("no batch");
             });
       }
-      logger.info("finished, received {} bytes", received.get());
+      logger.info("finished, received {} bytes in total", receivedBytes.get());
     }
   }
 }

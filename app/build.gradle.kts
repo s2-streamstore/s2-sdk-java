@@ -32,7 +32,6 @@ val executables = listOf(
     "org.example.app.BasinDemo",
     "org.example.app.ManagedReadSessionDemo",
     "org.example.app.ManagedAppendSessionDemo",
-    "org.example.app.ReadSessionDemo"
 )
 
 executables.forEach { mainClassName ->
