@@ -8,26 +8,16 @@ import java.util.Optional;
 
 public class AppendRecord implements MeteredBytes, Serializable {
 
-  private final List<Header> headers;
-  private final byte[] bytes;
+  final List<Header> headers;
+  final ByteString body;
 
-  // Private constructor to prevent direct instantiation
-  private AppendRecord(List<Header> headers, byte[] bytes) {
+  private AppendRecord(List<Header> headers, ByteString body) {
     this.headers = headers;
-    this.bytes = bytes;
+    this.body = body;
   }
 
-  // Factory method to create a builder
   public static AppendRecordBuilder newBuilder() {
     return new AppendRecordBuilder();
-  }
-
-  public List<Header> getHeaders() {
-    return headers;
-  }
-
-  public byte[] getBytes() {
-    return bytes;
   }
 
   @Override
@@ -35,40 +25,40 @@ public class AppendRecord implements MeteredBytes, Serializable {
     return 8
         + (2L * this.headers.size())
         + this.headers.stream().map(h -> h.name().size() + h.value().size()).reduce(0, Integer::sum)
-        + this.bytes.length;
+        + this.body.size();
   }
 
   public s2.v1alpha.AppendRecord toProto() {
     return s2.v1alpha.AppendRecord.newBuilder()
         .addAllHeaders(() -> this.headers.stream().map(Header::toProto).iterator())
-        .setBody(ByteString.copyFrom(this.bytes))
+        .setBody(this.body)
         .build();
   }
 
-  // Builder class for constructing AppendRecord
   public static class AppendRecordBuilder {
     private Optional<List<Header>> headers = Optional.empty();
-    private Optional<byte[]> bytes = Optional.empty();
+    private Optional<ByteString> body = Optional.empty();
 
-    // Set the headers with validation (if needed)
     public AppendRecordBuilder withHeaders(List<Header> headers) {
       this.headers = Optional.of(new ArrayList<>(headers));
       return this;
     }
 
-    // Set the bytes with validation (if needed)
-    public AppendRecordBuilder withBytes(byte[] bytes) {
-      this.bytes = Optional.of(bytes);
+    public AppendRecordBuilder withBody(byte[] body) {
+      this.body = Optional.of(ByteString.copyFrom(body));
       return this;
     }
 
-    // Build the AppendRecord with optional validation before returning
+    public AppendRecordBuilder withBody(ByteString body) {
+      this.body = Optional.of(body);
+      return this;
+    }
+
     public AppendRecord build() {
       List<Header> validatedHeaders = headers.orElse(new ArrayList<>());
-      byte[] validatedBytes = bytes.orElse(new byte[0]);
+      ByteString validatedBody = body.orElse(ByteString.EMPTY);
 
-      // Example validation: check that the headers are not empty or that bytes are not empty
-      var provisional = new AppendRecord(validatedHeaders, validatedBytes);
+      var provisional = new AppendRecord(validatedHeaders, validatedBody);
       var meteredBytes = provisional.meteredBytes();
       if (meteredBytes > 1024 * 1024) {
         throw new IllegalStateException(
