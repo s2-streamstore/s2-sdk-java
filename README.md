@@ -82,7 +82,7 @@ dependencies {
 
 ## Project Structure
 
-- `s2/` - The main SDK module.
+- `s2-sdk/` - The main SDK module.
 - `s2-internal/` - Code and types generated from
   the [S2 protobuf definitions](https://github.com/s2-streamstore/s2-protos).
 - `app/` - Example application demonstrating SDK usage.
