@@ -6,9 +6,9 @@ import java.util.Optional;
 import s2.utils.StreamUtils;
 
 public class ReconfigureStreamRequest {
-  final String stream;
-  final StreamConfig streamConfig;
-  final List<String> fieldMask;
+  public final String stream;
+  public final StreamConfig streamConfig;
+  public final List<String> fieldMask;
 
   private ReconfigureStreamRequest(
       String stream, StreamConfig streamConfig, List<String> fieldMask) {

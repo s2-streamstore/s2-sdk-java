@@ -8,8 +8,8 @@ import java.util.Optional;
 
 public class AppendRecord implements MeteredBytes, Serializable {
 
-  final List<Header> headers;
-  final ByteString body;
+  public final List<Header> headers;
+  public final ByteString body;
 
   private AppendRecord(List<Header> headers, ByteString body) {
     this.headers = headers;

@@ -6,9 +6,9 @@ import java.util.Optional;
 import s2.utils.BasinUtils;
 
 public class ReconfigureBasinRequest {
-  final String basin;
-  final BasinConfig basinConfig;
-  final List<String> fieldMask;
+  public final String basin;
+  public final BasinConfig basinConfig;
+  public final List<String> fieldMask;
 
   private ReconfigureBasinRequest(String basin, BasinConfig basinConfig, List<String> fieldMask) {
     this.basin = basin;

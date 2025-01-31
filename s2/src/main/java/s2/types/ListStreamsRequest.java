@@ -3,9 +3,9 @@ package s2.types;
 import java.util.Optional;
 
 public class ListStreamsRequest {
-  final String prefix;
-  final String startAfter;
-  final Optional<Integer> limit;
+  public final String prefix;
+  public final String startAfter;
+  public final Optional<Integer> limit;
 
   ListStreamsRequest(String prefix, String startAfter, Optional<Integer> limit) {
     this.prefix = prefix;

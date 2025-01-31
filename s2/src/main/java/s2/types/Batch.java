@@ -3,6 +3,7 @@ package s2.types;
 import java.util.Optional;
 
 public record Batch(SequencedRecordBatch sequencedRecordBatch) implements ReadOutput, MeteredBytes {
+
   public Optional<Long> firstSeqNum() {
     return this.sequencedRecordBatch.records().stream().findFirst().map(SequencedRecord::seqNum);
   }

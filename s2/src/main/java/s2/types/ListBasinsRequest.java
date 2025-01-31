@@ -3,9 +3,9 @@ package s2.types;
 import java.util.Optional;
 
 public class ListBasinsRequest {
-  final String prefix;
-  final String startAfter;
-  final Optional<Integer> limit;
+  public final String prefix;
+  public final String startAfter;
+  public final Optional<Integer> limit;
 
   ListBasinsRequest(String prefix, String startAfter, Optional<Integer> limit) {
     this.prefix = prefix;
