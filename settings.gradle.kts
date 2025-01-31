@@ -12,4 +12,4 @@ plugins {
 }
 
 rootProject.name = "s2-sdk-java"
-include("app", "s2", "s2-internal")
+include("app", "s2-sdk", "s2-internal")
