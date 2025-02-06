@@ -35,6 +35,8 @@ public class StreamClient extends BasinClient {
   /** Name of stream associated with this client. */
   final String streamName;
 
+  private static final String compressionCodec = "gzip";
+
   private final StreamServiceFutureStub futureStub;
   final StreamServiceStub asyncStub;
 
@@ -64,11 +66,13 @@ public class StreamClient extends BasinClient {
     this.futureStub =
         StreamServiceGrpc.newFutureStub(channel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
+            .withCompression(compressionCodec);
     this.asyncStub =
         StreamServiceGrpc.newStub(channel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
+            .withCompression(compressionCodec);
   }
 
   /**
