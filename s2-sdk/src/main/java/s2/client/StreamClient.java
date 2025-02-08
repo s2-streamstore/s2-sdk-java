@@ -63,16 +63,23 @@ public class StreamClient extends BasinClient {
     var meta = new Metadata();
     meta.put(Key.of("s2-basin", Metadata.ASCII_STRING_MARSHALLER), basin);
     this.streamName = streamName;
-    this.futureStub =
+
+    StreamServiceFutureStub futureStub =
         StreamServiceGrpc.newFutureStub(channel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
-            .withCompression(compressionCodec);
-    this.asyncStub =
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
+    StreamServiceStub asyncStub =
         StreamServiceGrpc.newStub(channel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta))
-            .withCompression(compressionCodec);
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
+
+    if (config.compression) {
+      futureStub = futureStub.withCompression(compressionCodec);
+      asyncStub = asyncStub.withCompression(compressionCodec);
+    }
+
+    this.futureStub = futureStub;
+    this.asyncStub = asyncStub;
   }
 
   /**

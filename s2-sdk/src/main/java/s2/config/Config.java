@@ -13,6 +13,7 @@ public class Config {
   public final Duration requestTimeout;
   public final Duration retryDelay;
   public final String userAgent;
+  public final Boolean compression;
 
   private Config(
       String token,
@@ -22,7 +23,8 @@ public class Config {
       Integer maxRetries,
       Duration requestTimeout,
       Duration retryDelay,
-      String userAgent) {
+      String userAgent,
+      Boolean compression) {
     this.token = token;
     this.appendRetryPolicy = appendRetryPolicy;
     this.endpoints = endpoints;
@@ -31,6 +33,7 @@ public class Config {
     this.requestTimeout = requestTimeout;
     this.retryDelay = retryDelay;
     this.userAgent = userAgent;
+    this.compression = compression;
   }
 
   public static ConfigBuilder newBuilder(String token) {
@@ -46,6 +49,7 @@ public class Config {
     private Optional<Duration> requestTimeout = Optional.empty();
     private Optional<Duration> retryDelay = Optional.empty();
     private Optional<String> userAgent = Optional.empty();
+    private Optional<Boolean> compression = Optional.empty();
 
     ConfigBuilder(String token) {
       this.token = token;
@@ -86,6 +90,11 @@ public class Config {
       return this;
     }
 
+    public ConfigBuilder withCompression(Boolean compression) {
+      this.compression = Optional.of(compression);
+      return this;
+    }
+
     public Config build() {
       validate();
       return new Config(
@@ -96,7 +105,8 @@ public class Config {
           this.maxRetries.orElse(3),
           this.requestTimeout.orElse(Duration.ofSeconds(10)),
           this.retryDelay.orElse(Duration.ofMillis(50)),
-          this.userAgent.orElse("s2-sdk-java"));
+          this.userAgent.orElse("s2-sdk-java"),
+          this.compression.orElse(false));
     }
 
     private void validate() {
