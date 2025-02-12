@@ -2,26 +2,53 @@ package s2.client;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.grpc.ManagedChannel;
 import io.grpc.Status;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import s2.channel.AutoClosableManagedChannel;
 import s2.config.Config;
 
 public abstract class BaseClient implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(BaseClient.class.getName());
   final Config config;
-  final ManagedChannel channel;
+  final AutoClosableManagedChannel channel;
   final ScheduledExecutorService executor;
+  final boolean ownedChannel;
+  final boolean ownedExecutor;
 
-  BaseClient(Config config, ManagedChannel channel, ScheduledExecutorService executor) {
+  BaseClient(
+      Config config,
+      AutoClosableManagedChannel channel,
+      ScheduledExecutorService executor,
+      boolean ownedChannel,
+      boolean ownedExecutor) {
     this.config = config;
     this.channel = channel;
     this.executor = executor;
+    this.ownedChannel = ownedChannel;
+    this.ownedExecutor = ownedExecutor;
+  }
+
+  static ScheduledExecutorService defaultExecutor(String name) {
+    return Executors.newScheduledThreadPool(
+        Runtime.getRuntime().availableProcessors(),
+        new ThreadFactory() {
+          private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+
+          @Override
+          public Thread newThread(Runnable r) {
+            Thread thread = defaultFactory.newThread(r);
+            thread.setDaemon(true);
+            thread.setName(String.format("S2-%s-%s", name, thread.getId()));
+            return thread;
+          }
+        });
   }
 
   static boolean retryableStatus(Status status) {
@@ -32,8 +59,12 @@ public abstract class BaseClient implements AutoCloseable {
   }
 
   public void close() throws Exception {
-    channel.shutdown();
-    executor.shutdown();
+    if (this.ownedChannel) {
+      this.channel.close();
+    }
+    if (this.ownedExecutor) {
+      this.executor.shutdown();
+    }
   }
 
   <T> ListenableFuture<T> withTimeout(Supplier<ListenableFuture<T>> op) {

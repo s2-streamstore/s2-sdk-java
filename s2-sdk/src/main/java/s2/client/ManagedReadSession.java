@@ -10,7 +10,7 @@ import s2.types.Batch;
 import s2.types.ReadOutput;
 import s2.types.ReadSessionRequest;
 
-public class ManagedReadSession {
+public class ManagedReadSession implements AutoCloseable {
 
   private final Semaphore bufferAvailable;
   private final LinkedBlockingQueue<ReadItem> queue;
@@ -90,6 +90,12 @@ public class ManagedReadSession {
 
   public Optional<ReadOutput> get(Duration maxWait) throws InterruptedException {
     return getInner(Optional.ofNullable(queue.poll(maxWait.toMillis(), TimeUnit.MILLISECONDS)));
+  }
+
+  @Override
+  public void close() throws Exception {
+    this.closed.set(true);
+    this.readSession.close();
   }
 
   private sealed interface ReadItem permits DataItem, ErrorItem, EndItem {}

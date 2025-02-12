@@ -24,24 +24,28 @@ import s2.types.AppendOutput;
 import s2.v1alpha.AppendSessionRequest;
 import s2.v1alpha.AppendSessionResponse;
 
-public class ManagedAppendSession {
+public class ManagedAppendSession implements AutoCloseable {
 
   static final int ACQUIRE_QUANTUM_MS = 50;
+
   private static final Logger logger =
       LoggerFactory.getLogger(ManagedAppendSession.class.getName());
+
   final ListeningScheduledExecutorService executor;
   final StreamClient client;
+
   final Integer bufferCapacityBytes;
   final Semaphore inflightBytes;
-  final ListenableFuture<Void> daemon;
+
   final AtomicInteger remainingAttempts;
   final AtomicReference<Optional<Long>> nextDeadlineSystemNanos =
       new AtomicReference<>(Optional.empty());
   final AtomicBoolean acceptingAppends = new AtomicBoolean(true);
-  // TODO can use theoretical max for smallest possible batch sizes given inflightBytes budget to
-  // bound queue sizes
+
   final LinkedBlockingQueue<InflightRecord> inflightQueue = new LinkedBlockingQueue<>();
   final LinkedBlockingQueue<Notification> notificationQueue = new LinkedBlockingQueue<>();
+
+  final ListenableFuture<Void> daemon;
 
   ManagedAppendSession(StreamClient client) {
     this.executor = MoreExecutors.listeningDecorator(client.executor);
@@ -113,12 +117,6 @@ public class ManagedAppendSession {
       throw new RuntimeException("AppendSession has been shutdown.");
     }
     return true;
-  }
-
-  public ListenableFuture<Void> closeGracefully() throws InterruptedException {
-    this.acceptingAppends.set(false);
-    this.notificationQueue.put(new ClientClose(true));
-    return daemon;
   }
 
   /// Note that this will NOT resolve any outstanding futures issued by this session.
@@ -345,6 +343,17 @@ public class ManagedAppendSession {
       }
     }
     return null;
+  }
+
+  @Override
+  public void close() throws Exception {
+    this.closeGracefully().get();
+  }
+
+  public ListenableFuture<Void> closeGracefully() throws InterruptedException {
+    this.acceptingAppends.set(false);
+    this.notificationQueue.put(new ClientClose(true));
+    return daemon;
   }
 
   sealed interface Notification permits Ack, Batch, ClientClose, Error, ServerClose {}

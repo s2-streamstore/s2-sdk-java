@@ -16,18 +16,22 @@ import s2.types.ReadOutput;
 import s2.types.ReadSessionRequest;
 import s2.v1alpha.ReadSessionResponse;
 
-public class ReadSession {
+public class ReadSession implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(ReadSession.class.getName());
+
   final ScheduledExecutorService executor;
   final StreamClient client;
+
   final AtomicLong nextStartSeqNum;
   final AtomicLong consumedRecords = new AtomicLong();
   final AtomicLong consumedBytes = new AtomicLong(0);
+  final AtomicInteger remainingAttempts;
+
   final Consumer<ReadOutput> onResponse;
   final Consumer<Throwable> onError;
+
   final ReadSessionRequest request;
-  final AtomicInteger remainingAttempts;
   final ListenableFuture<Void> daemon;
 
   ReadSession(
@@ -110,5 +114,10 @@ public class ReadSession {
 
   public ListenableFuture<Void> awaitCompletion() {
     return this.daemon;
+  }
+
+  @Override
+  public void close() throws Exception {
+    this.daemon.cancel(true);
   }
 }

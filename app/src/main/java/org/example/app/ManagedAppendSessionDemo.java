@@ -11,7 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.Client;
+import s2.channel.ManagedChannelFactory;
+import s2.client.StreamClient;
 import s2.config.AppendRetryPolicy;
 import s2.config.Config;
 import s2.config.Endpoints;
@@ -69,69 +70,67 @@ public class ManagedAppendSessionDemo {
     final LinkedBlockingQueue<ListenableFuture<AppendOutput>> pendingAppends =
         new LinkedBlockingQueue<>();
 
-    var executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
-    var consumer =
-        executor.submit(
-            () -> {
-              try {
-                while (true) {
-                  var output = pendingAppends.take().get();
-                  if (output == null) {
-                    logger.info("consumer closing");
-                    break;
+    try (final var executor =
+            MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(4));
+        final var channel = ManagedChannelFactory.forBasinOrStreamService(config, basinName)) {
+
+      final var consumer =
+          executor.submit(
+              () -> {
+                try {
+                  while (true) {
+                    var output = pendingAppends.take().get();
+                    if (output == null) {
+                      logger.info("consumer closing");
+                      break;
+                    }
+                    logger.info("consumer got: {}", output);
                   }
-                  logger.info("consumer got: {}", output);
+                } catch (Exception e) {
+                  logger.error("consumer failed", e);
                 }
-              } catch (Exception e) {
-                logger.error("consumer failed", e);
-              }
-            });
+              });
 
-    try (var client = new Client(config)) {
+      final var streamClient =
+          StreamClient.newBuilder(config, basinName, streamName)
+              .withExecutor(executor)
+              .withChannel(channel)
+              .build();
 
-      final var streamClient = client.basinClient(basinName).streamClient(streamName);
-      final var futureAppendSession = streamClient.managedAppendSession();
+      try (final var futureAppendSession = streamClient.managedAppendSession()) {
 
-      for (var i = 0; i < 50_000; i++) {
-        try {
-          // Generate a record with approximately 10KiB of random text.
-          var payload = RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024 * 10);
-          var append =
-              futureAppendSession.submit(
-                  AppendInput.newBuilder()
-                      .withRecords(
-                          List.of(
-                              AppendRecord.newBuilder()
-                                  .withBody(payload.getBytes(StandardCharsets.UTF_8))
-                                  .build()))
-                      .build(),
-                  // Duration is how long we are willing to wait to receive a future.
-                  Duration.ofSeconds(1));
+        for (var i = 0; i < 50_000; i++) {
+          try {
+            // Generate a record with approximately 10KiB of random text.
+            var payload =
+                RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024 * 10);
+            var append =
+                futureAppendSession.submit(
+                    AppendInput.newBuilder()
+                        .withRecords(
+                            List.of(
+                                AppendRecord.newBuilder()
+                                    .withBody(payload.getBytes(StandardCharsets.UTF_8))
+                                    .build()))
+                        .build(),
+                    // Duration is how long we are willing to wait to receive a future.
+                    Duration.ofSeconds(1));
 
-          pendingAppends.add(append);
-        } catch (RuntimeException e) {
-          logger.error("producer failed", e);
-          pendingAppends.add(Futures.immediateFailedFuture(e));
-          break;
+            pendingAppends.add(append);
+          } catch (RuntimeException e) {
+            logger.error("producer failed", e);
+            pendingAppends.add(Futures.immediateFailedFuture(e));
+            break;
+          }
         }
+
+        logger.info("finished submitting all appends");
+
+        // Signal to the consumer that no further appends are happening.
+        pendingAppends.add(Futures.immediateFuture(null));
       }
 
-      logger.info("finished submitting all appends");
-
-      // Signal to the consumer that no further appends are happening.
-      pendingAppends.add(Futures.immediateFuture(null));
-
-      logger.info("starting graceful close");
-      try {
-        futureAppendSession.closeGracefully().get();
-      } catch (Exception e) {
-        logger.error("caught exception during close", e);
-      }
-      logger.info("finished closing");
+      consumer.get();
     }
-
-    // Await the consumer future.
-    consumer.get();
-    executor.shutdown();
   }
 }
