@@ -7,33 +7,33 @@ import java.util.Optional;
 public class Config {
   public final String token;
   public final AppendRetryPolicy appendRetryPolicy;
+  public final Boolean compression;
   public final Endpoints endpoints;
   public final Integer maxAppendInflightBytes;
   public final Integer maxRetries;
   public final Duration requestTimeout;
   public final Duration retryDelay;
   public final String userAgent;
-  public final Boolean compression;
 
   private Config(
       String token,
       AppendRetryPolicy appendRetryPolicy,
+      Boolean compression,
       Endpoints endpoints,
       Integer maxAppendInflightBytes,
       Integer maxRetries,
       Duration requestTimeout,
       Duration retryDelay,
-      String userAgent,
-      Boolean compression) {
+      String userAgent) {
     this.token = token;
     this.appendRetryPolicy = appendRetryPolicy;
+    this.compression = compression;
     this.endpoints = endpoints;
     this.maxAppendInflightBytes = maxAppendInflightBytes;
     this.maxRetries = maxRetries;
     this.requestTimeout = requestTimeout;
     this.retryDelay = retryDelay;
     this.userAgent = userAgent;
-    this.compression = compression;
   }
 
   public static ConfigBuilder newBuilder(String token) {
@@ -57,6 +57,11 @@ public class Config {
 
     public ConfigBuilder withAppendRetryPolicy(AppendRetryPolicy appendRetryPolicy) {
       this.appendRetryPolicy = Optional.of(appendRetryPolicy);
+      return this;
+    }
+
+    public ConfigBuilder withCompression(Boolean compression) {
+      this.compression = Optional.of(compression);
       return this;
     }
 
@@ -90,23 +95,18 @@ public class Config {
       return this;
     }
 
-    public ConfigBuilder withCompression(Boolean compression) {
-      this.compression = Optional.of(compression);
-      return this;
-    }
-
     public Config build() {
       validate();
       return new Config(
           this.token,
           this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL),
+          this.compression.orElse(false),
           this.endpoints.orElse(Endpoints.forCloud(Cloud.AWS)),
           this.maxAppendInflightBytes.orElse(Integer.MAX_VALUE),
           this.maxRetries.orElse(3),
           this.requestTimeout.orElse(Duration.ofSeconds(10)),
           this.retryDelay.orElse(Duration.ofMillis(50)),
-          this.userAgent.orElse("s2-sdk-java"),
-          this.compression.orElse(false));
+          this.userAgent.orElse("s2-sdk-java"));
     }
 
     private void validate() {
