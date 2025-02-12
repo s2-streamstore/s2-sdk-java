@@ -7,6 +7,7 @@ import java.util.Optional;
 public class Config {
   public final String token;
   public final AppendRetryPolicy appendRetryPolicy;
+  public final Boolean compression;
   public final Endpoints endpoints;
   public final Integer maxAppendInflightBytes;
   public final Integer maxRetries;
@@ -17,6 +18,7 @@ public class Config {
   private Config(
       String token,
       AppendRetryPolicy appendRetryPolicy,
+      Boolean compression,
       Endpoints endpoints,
       Integer maxAppendInflightBytes,
       Integer maxRetries,
@@ -25,6 +27,7 @@ public class Config {
       String userAgent) {
     this.token = token;
     this.appendRetryPolicy = appendRetryPolicy;
+    this.compression = compression;
     this.endpoints = endpoints;
     this.maxAppendInflightBytes = maxAppendInflightBytes;
     this.maxRetries = maxRetries;
@@ -46,6 +49,7 @@ public class Config {
     private Optional<Duration> requestTimeout = Optional.empty();
     private Optional<Duration> retryDelay = Optional.empty();
     private Optional<String> userAgent = Optional.empty();
+    private Optional<Boolean> compression = Optional.empty();
 
     ConfigBuilder(String token) {
       this.token = token;
@@ -53,6 +57,11 @@ public class Config {
 
     public ConfigBuilder withAppendRetryPolicy(AppendRetryPolicy appendRetryPolicy) {
       this.appendRetryPolicy = Optional.of(appendRetryPolicy);
+      return this;
+    }
+
+    public ConfigBuilder withCompression(Boolean compression) {
+      this.compression = Optional.of(compression);
       return this;
     }
 
@@ -91,6 +100,7 @@ public class Config {
       return new Config(
           this.token,
           this.appendRetryPolicy.orElse(AppendRetryPolicy.ALL),
+          this.compression.orElse(false),
           this.endpoints.orElse(Endpoints.forCloud(Cloud.AWS)),
           this.maxAppendInflightBytes.orElse(Integer.MAX_VALUE),
           this.maxRetries.orElse(3),
