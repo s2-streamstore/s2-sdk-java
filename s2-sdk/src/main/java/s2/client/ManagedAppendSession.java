@@ -10,6 +10,7 @@ import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -346,13 +347,19 @@ public class ManagedAppendSession implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
-    this.closeGracefully().get();
+  public void close() {
+    try {
+      this.closeGracefully().get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public ListenableFuture<Void> closeGracefully() throws InterruptedException {
+  public ListenableFuture<Void> closeGracefully() {
     this.acceptingAppends.set(false);
-    this.notificationQueue.put(new ClientClose(true));
+    this.notificationQueue.add(new ClientClose(true));
     return daemon;
   }
 

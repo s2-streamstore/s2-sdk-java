@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import s2.auth.BearerTokenCallCredentials;
-import s2.channel.BasinChannel;
+import s2.channel.BasinCompatibleChannel;
 import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.CreateStreamRequest;
@@ -31,7 +31,7 @@ public class BasinClient extends BaseClient {
   BasinClient(
       Config config,
       String basin,
-      BasinChannel channel,
+      BasinCompatibleChannel channel,
       ScheduledExecutorService executor,
       boolean ownedChannel,
       boolean ownedExecutor) {
@@ -154,7 +154,7 @@ public class BasinClient extends BaseClient {
   public static class BasinClientBuilder {
     private final Config config;
     private final String basin;
-    private Optional<BasinChannel> channel = Optional.empty();
+    private Optional<BasinCompatibleChannel> channel = Optional.empty();
     private Optional<ScheduledExecutorService> executor = Optional.empty();
 
     BasinClientBuilder(Config config, String basin) {
@@ -162,7 +162,7 @@ public class BasinClient extends BaseClient {
       this.basin = basin;
     }
 
-    public BasinClientBuilder withChannel(BasinChannel channel) {
+    public BasinClientBuilder withChannel(BasinCompatibleChannel channel) {
       this.channel = Optional.of(channel);
       return this;
     }

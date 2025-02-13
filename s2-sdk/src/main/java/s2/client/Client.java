@@ -11,7 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
-import s2.channel.AccountChannel;
+import s2.channel.AccountCompatibleChannel;
 import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.BasinConfig;
@@ -32,7 +32,7 @@ public class Client extends BaseClient {
 
   private Client(
       Config config,
-      AccountChannel channel,
+      AccountCompatibleChannel channel,
       ScheduledExecutorService executor,
       boolean ownedChannel,
       boolean ownedClient) {
@@ -152,14 +152,14 @@ public class Client extends BaseClient {
   public static class ClientBuilder {
 
     private final Config config;
-    private Optional<AccountChannel> channel = Optional.empty();
+    private Optional<AccountCompatibleChannel> channel = Optional.empty();
     private Optional<ScheduledExecutorService> executor = Optional.empty();
 
     public ClientBuilder(Config config) {
       this.config = config;
     }
 
-    public ClientBuilder withChannel(AccountChannel channel) {
+    public ClientBuilder withChannel(AccountCompatibleChannel channel) {
       this.channel = Optional.of(channel);
       return this;
     }

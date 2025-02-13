@@ -1,5 +1,16 @@
 package s2.channel;
 
-public interface AccountChannel {
-  AutoClosableManagedChannel getChannel();
+import io.grpc.ManagedChannel;
+
+public final class AccountChannel extends AutoClosableManagedChannel
+    implements AccountCompatibleChannel {
+
+  AccountChannel(ManagedChannel managedChannel) {
+    super(managedChannel);
+  }
+
+  @Override
+  public AutoClosableManagedChannel getChannel() {
+    return this;
+  }
 }

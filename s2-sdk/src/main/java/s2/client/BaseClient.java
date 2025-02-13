@@ -58,7 +58,7 @@ public abstract class BaseClient implements AutoCloseable {
     };
   }
 
-  public void close() throws Exception {
+  public void close() {
     if (this.ownedChannel) {
       this.channel.close();
     }

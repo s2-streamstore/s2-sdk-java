@@ -22,27 +22,6 @@ import s2.types.AppendRecord;
 
 public class ManagedAppendSessionDemo {
 
-  static class RandomASCIIStringGenerator {
-    private static final String ASCII_PRINTABLE_CHARACTERS =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz" + "0123456789";
-
-    private static final Random RANDOM = new Random();
-
-    public static String generateRandomASCIIString(String prefix, int length) {
-      if (length < 0) {
-        throw new IllegalArgumentException("Length cannot be negative.");
-      }
-
-      StringBuilder sb = new StringBuilder(length);
-      sb.append(prefix);
-      for (int i = 0; i < length - prefix.length(); i++) {
-        int index = RANDOM.nextInt(ASCII_PRINTABLE_CHARACTERS.length());
-        sb.append(ASCII_PRINTABLE_CHARACTERS.charAt(index));
-      }
-      return sb.toString();
-    }
-  }
-
   private static final Logger logger =
       LoggerFactory.getLogger(ManagedAppendSessionDemo.class.getName());
 
@@ -114,7 +93,7 @@ public class ManagedAppendSessionDemo {
                                     .build()))
                         .build(),
                     // Duration is how long we are willing to wait to receive a future.
-                    Duration.ofSeconds(1));
+                    Duration.ofSeconds(10));
 
             pendingAppends.add(append);
           } catch (RuntimeException e) {
@@ -131,6 +110,27 @@ public class ManagedAppendSessionDemo {
       }
 
       consumer.get();
+    }
+  }
+
+  static class RandomASCIIStringGenerator {
+    private static final String ASCII_PRINTABLE_CHARACTERS =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz" + "0123456789";
+
+    private static final Random RANDOM = new Random();
+
+    public static String generateRandomASCIIString(String prefix, int length) {
+      if (length < 0) {
+        throw new IllegalArgumentException("Length cannot be negative.");
+      }
+
+      StringBuilder sb = new StringBuilder(length);
+      sb.append(prefix);
+      for (int i = 0; i < length - prefix.length(); i++) {
+        int index = RANDOM.nextInt(ASCII_PRINTABLE_CHARACTERS.length());
+        sb.append(ASCII_PRINTABLE_CHARACTERS.charAt(index));
+      }
+      return sb.toString();
     }
   }
 }

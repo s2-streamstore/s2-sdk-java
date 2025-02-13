@@ -117,7 +117,7 @@ public class ReadSession implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     this.daemon.cancel(true);
   }
 }
