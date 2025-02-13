@@ -44,7 +44,7 @@ public class ReadSessionTest {
                 Config.newBuilder("fake-token").withMaxRetries(3).build(),
                 "test-basin",
                 "test-stream")
-            .withChannel(AutoClosableManagedChannel.of(channel))
+            .withChannel(() -> new AutoClosableManagedChannel(channel) {})
             .withExecutor(executor)
             .build();
   }

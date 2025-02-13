@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import s2.auth.BearerTokenCallCredentials;
-import s2.channel.AutoClosableManagedChannel;
+import s2.channel.BasinChannel;
 import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.CreateStreamRequest;
@@ -31,16 +31,16 @@ public class BasinClient extends BaseClient {
   BasinClient(
       Config config,
       String basin,
-      AutoClosableManagedChannel channel,
+      BasinChannel channel,
       ScheduledExecutorService executor,
       boolean ownedChannel,
       boolean ownedExecutor) {
-    super(config, channel, executor, ownedChannel, ownedExecutor);
+    super(config, channel.getChannel(), executor, ownedChannel, ownedExecutor);
     var meta = new Metadata();
     meta.put(Key.of("s2-basin", Metadata.ASCII_STRING_MARSHALLER), basin);
     this.basin = basin;
     this.futureStub =
-        BasinServiceGrpc.newFutureStub(channel.managedChannel)
+        BasinServiceGrpc.newFutureStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
   }
@@ -154,7 +154,7 @@ public class BasinClient extends BaseClient {
   public static class BasinClientBuilder {
     private final Config config;
     private final String basin;
-    private Optional<AutoClosableManagedChannel> channel = Optional.empty();
+    private Optional<BasinChannel> channel = Optional.empty();
     private Optional<ScheduledExecutorService> executor = Optional.empty();
 
     BasinClientBuilder(Config config, String basin) {
@@ -162,7 +162,7 @@ public class BasinClient extends BaseClient {
       this.basin = basin;
     }
 
-    public BasinClientBuilder withChannel(AutoClosableManagedChannel channel) {
+    public BasinClientBuilder withChannel(BasinChannel channel) {
       this.channel = Optional.of(channel);
       return this;
     }

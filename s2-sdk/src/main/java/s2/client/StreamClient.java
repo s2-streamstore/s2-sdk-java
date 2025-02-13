@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
-import s2.channel.AutoClosableManagedChannel;
+import s2.channel.BasinChannel;
 import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.AppendInput;
@@ -45,7 +45,7 @@ public class StreamClient extends BasinClient {
       Config config,
       String basin,
       String streamName,
-      AutoClosableManagedChannel channel,
+      BasinChannel channel,
       ScheduledExecutorService executor,
       boolean ownedChannel,
       boolean ownedExecutor) {
@@ -55,11 +55,11 @@ public class StreamClient extends BasinClient {
     this.streamName = streamName;
 
     StreamServiceFutureStub futureStub =
-        StreamServiceGrpc.newFutureStub(channel.managedChannel)
+        StreamServiceGrpc.newFutureStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
     StreamServiceStub asyncStub =
-        StreamServiceGrpc.newStub(channel.managedChannel)
+        StreamServiceGrpc.newStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
 
@@ -261,7 +261,7 @@ public class StreamClient extends BasinClient {
     private final Config config;
     private final String basinName;
     private final String streamName;
-    private Optional<AutoClosableManagedChannel> channel = Optional.empty();
+    private Optional<BasinChannel> channel = Optional.empty();
     private Optional<ScheduledExecutorService> executor = Optional.empty();
 
     public StreamClientBuilder(Config config, String basinName, String streamName) {
@@ -270,7 +270,7 @@ public class StreamClient extends BasinClient {
       this.streamName = streamName;
     }
 
-    public StreamClientBuilder withChannel(AutoClosableManagedChannel channel) {
+    public StreamClientBuilder withChannel(BasinChannel channel) {
       this.channel = Optional.of(channel);
       return this;
     }

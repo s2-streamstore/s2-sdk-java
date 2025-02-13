@@ -7,12 +7,8 @@ public class AutoClosableManagedChannel implements AutoCloseable {
 
   public final ManagedChannel managedChannel;
 
-  private AutoClosableManagedChannel(ManagedChannel managedChannel) {
+  public AutoClosableManagedChannel(ManagedChannel managedChannel) {
     this.managedChannel = managedChannel;
-  }
-
-  public static AutoClosableManagedChannel of(ManagedChannel managedChannel) {
-    return new AutoClosableManagedChannel(managedChannel);
   }
 
   @Override

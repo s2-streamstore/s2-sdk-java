@@ -11,7 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
-import s2.channel.AutoClosableManagedChannel;
+import s2.channel.AccountChannel;
 import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.BasinConfig;
@@ -32,13 +32,13 @@ public class Client extends BaseClient {
 
   private Client(
       Config config,
-      AutoClosableManagedChannel channel,
+      AccountChannel channel,
       ScheduledExecutorService executor,
       boolean ownedChannel,
       boolean ownedClient) {
-    super(config, channel, executor, ownedChannel, ownedClient);
+    super(config, channel.getChannel(), executor, ownedChannel, ownedClient);
     this.futureStub =
-        AccountServiceGrpc.newFutureStub(channel.managedChannel)
+        AccountServiceGrpc.newFutureStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token));
   }
 
@@ -152,14 +152,14 @@ public class Client extends BaseClient {
   public static class ClientBuilder {
 
     private final Config config;
-    private Optional<AutoClosableManagedChannel> channel = Optional.empty();
+    private Optional<AccountChannel> channel = Optional.empty();
     private Optional<ScheduledExecutorService> executor = Optional.empty();
 
     public ClientBuilder(Config config) {
       this.config = config;
     }
 
-    public ClientBuilder withChannel(AutoClosableManagedChannel channel) {
+    public ClientBuilder withChannel(AccountChannel channel) {
       this.channel = Optional.of(channel);
       return this;
     }
