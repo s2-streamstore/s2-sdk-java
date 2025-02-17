@@ -23,7 +23,7 @@ public class AccountDemo {
             .withEndpoints(Endpoints.fromEnvironment())
             .build();
 
-    try (var client = new Client(config)) {
+    try (var client = Client.newBuilder(config).build()) {
 
       var basins = client.listBasins(ListBasinsRequest.newBuilder().build()).get();
       basins.elems().forEach(basin -> logger.info("basin={}", basin));

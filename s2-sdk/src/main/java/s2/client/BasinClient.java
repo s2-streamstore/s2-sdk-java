@@ -2,14 +2,15 @@ package s2.client;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.stub.MetadataUtils;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import s2.auth.BearerTokenCallCredentials;
+import s2.channel.BasinCompatibleChannel;
+import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.CreateStreamRequest;
 import s2.types.Paginated;
@@ -27,47 +28,25 @@ public class BasinClient extends BaseClient {
 
   private final BasinServiceGrpc.BasinServiceFutureStub futureStub;
 
-  /**
-   * Instantiates a new Basin client.
-   *
-   * <p>Most users will prefer to use the {@link s2.client.Client#basinClient(String)} method for
-   * construction.
-   *
-   * @see s2.client.Client#basinClient
-   * @param basin the basin
-   * @param config the config
-   * @param executor the executor
-   */
-  public BasinClient(String basin, Config config, ScheduledExecutorService executor) {
-    this(
-        basin,
-        config,
-        ManagedChannelBuilder.forTarget(config.endpoints.basin.toTarget(basin)).build(),
-        executor);
-  }
-
-  /**
-   * Instantiates a new Basin client.
-   *
-   * <p>Most users will prefer to use the {@link s2.client.Client#basinClient(String)} method for
-   * construction.
-   *
-   * @see s2.client.Client#basinClient
-   * @param basin the basin
-   * @param config the config
-   * @param channel the channel
-   * @param executor the executor
-   */
-  public BasinClient(
-      String basin, Config config, ManagedChannel channel, ScheduledExecutorService executor) {
-    super(config, channel, executor);
+  BasinClient(
+      Config config,
+      String basin,
+      BasinCompatibleChannel channel,
+      ScheduledExecutorService executor,
+      boolean ownedChannel,
+      boolean ownedExecutor) {
+    super(config, channel.getChannel(), executor, ownedChannel, ownedExecutor);
     var meta = new Metadata();
     meta.put(Key.of("s2-basin", Metadata.ASCII_STRING_MARSHALLER), basin);
     this.basin = basin;
     this.futureStub =
-        BasinServiceGrpc.newFutureStub(channel)
+        BasinServiceGrpc.newFutureStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
+  }
+
+  public static BasinClientBuilder newBuilder(Config config, String basin) {
+    return new BasinClientBuilder(config, basin);
   }
 
   /**
@@ -172,13 +151,36 @@ public class BasinClient extends BaseClient {
                 executor));
   }
 
-  /**
-   * Create a StreamClient for interacting with stream-level RPCs.
-   *
-   * @param streamName the stream name
-   * @return the stream client
-   */
-  public StreamClient streamClient(String streamName) {
-    return new StreamClient(streamName, this.basin, this.config, this.channel, this.executor);
+  public static class BasinClientBuilder {
+    private final Config config;
+    private final String basin;
+    private Optional<BasinCompatibleChannel> channel = Optional.empty();
+    private Optional<ScheduledExecutorService> executor = Optional.empty();
+
+    BasinClientBuilder(Config config, String basin) {
+      this.config = config;
+      this.basin = basin;
+    }
+
+    public BasinClientBuilder withChannel(BasinCompatibleChannel channel) {
+      this.channel = Optional.of(channel);
+      return this;
+    }
+
+    public BasinClientBuilder withExecutor(ScheduledExecutorService executor) {
+      this.executor = Optional.of(executor);
+      return this;
+    }
+
+    public BasinClient build() {
+      return new BasinClient(
+          this.config,
+          this.basin,
+          this.channel.orElseGet(
+              () -> ManagedChannelFactory.forBasinOrStreamService(this.config, this.basin)),
+          this.executor.orElseGet(() -> BaseClient.defaultExecutor("basinClient")),
+          this.channel.isEmpty(),
+          this.executor.isEmpty());
+    }
   }
 }

@@ -8,10 +8,12 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import s2.channel.AutoClosableManagedChannel;
 import s2.config.Config;
 import s2.types.Batch;
 import s2.types.ReadLimit;
@@ -23,6 +25,7 @@ public class ReadSessionTest {
   private Server server;
   private ManagedChannel channel;
   private StreamClient client;
+  private ScheduledExecutorService executor;
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -35,21 +38,22 @@ public class ReadSessionTest {
             .start();
 
     channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
-
-    Config config = Config.newBuilder("fake-token").withMaxRetries(3).build();
+    executor = Executors.newSingleThreadScheduledExecutor();
     client =
-        new StreamClient(
-            "test-stream",
-            "test-basin",
-            config,
-            channel,
-            Executors.newSingleThreadScheduledExecutor());
+        StreamClient.newBuilder(
+                Config.newBuilder("fake-token").withMaxRetries(3).build(),
+                "test-basin",
+                "test-stream")
+            .withChannel(() -> new AutoClosableManagedChannel(channel) {})
+            .withExecutor(executor)
+            .build();
   }
 
   @AfterEach
   public void tearDown() throws Exception {
     channel.shutdownNow();
     server.shutdownNow();
+    executor.shutdownNow();
   }
 
   @Test

@@ -2,16 +2,18 @@ package s2.client;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
+import s2.channel.BasinCompatibleChannel;
+import s2.channel.ManagedChannelFactory;
 import s2.config.Config;
 import s2.types.AppendInput;
 import s2.types.AppendOutput;
@@ -31,45 +33,33 @@ import s2.v1alpha.StreamServiceGrpc.StreamServiceStub;
 public class StreamClient extends BasinClient {
 
   private static final Logger logger = LoggerFactory.getLogger(StreamClient.class.getName());
+  private static final String compressionCodec = "gzip";
 
   /** Name of stream associated with this client. */
   final String streamName;
 
-  private static final String compressionCodec = "gzip";
-
-  private final StreamServiceFutureStub futureStub;
   final StreamServiceStub asyncStub;
+  private final StreamServiceFutureStub futureStub;
 
-  /**
-   * Instantiates a new Stream client.
-   *
-   * <p>Most users will prefer to use the {@link s2.client.BasinClient#streamClient(String)} method
-   * for construction.
-   *
-   * @see s2.client.BasinClient#streamClient
-   * @param streamName the stream name
-   * @param basin the basin
-   * @param config the config
-   * @param channel the channel
-   * @param executor the executor
-   */
-  public StreamClient(
-      String streamName,
-      String basin,
+  private StreamClient(
       Config config,
-      ManagedChannel channel,
-      ScheduledExecutorService executor) {
-    super(basin, config, channel, executor);
+      String basin,
+      String streamName,
+      BasinCompatibleChannel channel,
+      ScheduledExecutorService executor,
+      boolean ownedChannel,
+      boolean ownedExecutor) {
+    super(config, basin, channel, executor, ownedChannel, ownedExecutor);
     var meta = new Metadata();
     meta.put(Key.of("s2-basin", Metadata.ASCII_STRING_MARSHALLER), basin);
     this.streamName = streamName;
 
     StreamServiceFutureStub futureStub =
-        StreamServiceGrpc.newFutureStub(channel)
+        StreamServiceGrpc.newFutureStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
     StreamServiceStub asyncStub =
-        StreamServiceGrpc.newStub(channel)
+        StreamServiceGrpc.newStub(channel.getChannel().managedChannel)
             .withCallCredentials(new BearerTokenCallCredentials(config.token))
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(meta));
 
@@ -80,6 +70,10 @@ public class StreamClient extends BasinClient {
 
     this.futureStub = futureStub;
     this.asyncStub = asyncStub;
+  }
+
+  public static StreamClientBuilder newBuilder(Config config, String basinName, String streamName) {
+    return new StreamClientBuilder(config, basinName, streamName);
   }
 
   /**
@@ -260,6 +254,43 @@ public class StreamClient extends BasinClient {
    */
   public ManagedAppendSession managedAppendSession() {
     return new ManagedAppendSession(this);
+  }
+
+  public static class StreamClientBuilder {
+
+    private final Config config;
+    private final String basinName;
+    private final String streamName;
+    private Optional<BasinCompatibleChannel> channel = Optional.empty();
+    private Optional<ScheduledExecutorService> executor = Optional.empty();
+
+    public StreamClientBuilder(Config config, String basinName, String streamName) {
+      this.config = config;
+      this.basinName = basinName;
+      this.streamName = streamName;
+    }
+
+    public StreamClientBuilder withChannel(BasinCompatibleChannel channel) {
+      this.channel = Optional.of(channel);
+      return this;
+    }
+
+    public StreamClientBuilder withExecutor(ScheduledExecutorService executor) {
+      this.executor = Optional.of(executor);
+      return this;
+    }
+
+    public StreamClient build() {
+      return new StreamClient(
+          this.config,
+          this.basinName,
+          this.streamName,
+          this.channel.orElseGet(
+              () -> ManagedChannelFactory.forBasinOrStreamService(this.config, this.basinName)),
+          this.executor.orElseGet(() -> BaseClient.defaultExecutor("streamClient")),
+          this.channel.isEmpty(),
+          this.executor.isEmpty());
+    }
   }
 
   public record AppendSessionRequestStream(

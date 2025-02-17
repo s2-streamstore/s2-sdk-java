@@ -2,7 +2,7 @@ package org.example.app;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.Client;
+import s2.client.BasinClient;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.CreateStreamRequest;
@@ -14,15 +14,14 @@ public class BasinDemo {
   private static final Logger logger = LoggerFactory.getLogger(BasinDemo.class.getName());
 
   public static void main(String[] args) throws Exception {
-    var config =
+    final var config =
         Config.newBuilder(System.getenv("S2_AUTH_TOKEN"))
             .withEndpoints(Endpoints.fromEnvironment())
             .build();
 
-    try (var client = new Client(config)) {
-
-      var basinClient = client.basinClient("my-first-basin");
-      var streams = basinClient.listStreams(ListStreamsRequest.newBuilder().build()).get();
+    try (final var basinClient =
+        BasinClient.newBuilder(config, System.getenv("S2_BASIN")).build()) {
+      final var streams = basinClient.listStreams(ListStreamsRequest.newBuilder().build()).get();
       streams
           .elems()
           .forEach(

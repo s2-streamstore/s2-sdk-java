@@ -1,10 +1,12 @@
 package org.example.app;
 
 import java.time.Duration;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import s2.client.Client;
+import s2.channel.ManagedChannelFactory;
+import s2.client.StreamClient;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.Batch;
@@ -33,38 +35,44 @@ public class ManagedReadSessionDemo {
 
     var config = Config.newBuilder(authToken).withEndpoints(Endpoints.fromEnvironment()).build();
 
-    try (var client = new Client(config)) {
+    try (final var executor = new ScheduledThreadPoolExecutor(1);
+        final var channel = ManagedChannelFactory.forBasinOrStreamService(config, basinName)) {
 
-      var streamClient = client.basinClient(basinName).streamClient(streamName);
+      final var streamClient =
+          StreamClient.newBuilder(config, basinName, streamName)
+              .withExecutor(executor)
+              .withChannel(channel)
+              .build();
 
-      var managedSession =
+      try (final var managedSession =
           streamClient.managedReadSession(
               ReadSessionRequest.newBuilder().withReadLimit(ReadLimit.count(100_000)).build(),
-              1024 * 1024 * 1024);
+              1024 * 1024 * 1024)) {
 
-      AtomicLong receivedBytes = new AtomicLong();
-      while (!managedSession.isClosed()) {
-        // Poll for up to 1 minute.
-        var resp = managedSession.get(Duration.ofSeconds(60));
-        resp.ifPresentOrElse(
-            elem -> {
-              if (elem instanceof Batch batch) {
-                var size = batch.meteredBytes();
-                logger.info(
-                    "batch of {} bytes, seqnums {}..={}",
-                    size,
-                    batch.firstSeqNum(),
-                    batch.lastSeqNum());
-                receivedBytes.addAndGet(size);
-              } else {
-                logger.info("non batch received: {}", elem);
-              }
-            },
-            () -> {
-              logger.info("no batch");
-            });
+        AtomicLong receivedBytes = new AtomicLong();
+        while (!managedSession.isClosed()) {
+          // Poll for up to 1 minute.
+          var resp = managedSession.get(Duration.ofSeconds(60));
+          resp.ifPresentOrElse(
+              elem -> {
+                if (elem instanceof Batch batch) {
+                  var size = batch.meteredBytes();
+                  logger.info(
+                      "batch of {} bytes, seqnums {}..={}",
+                      size,
+                      batch.firstSeqNum(),
+                      batch.lastSeqNum());
+                  receivedBytes.addAndGet(size);
+                } else {
+                  logger.info("non batch received: {}", elem);
+                }
+              },
+              () -> {
+                logger.info("no batch");
+              });
+        }
+        logger.info("finished, received {} bytes in total", receivedBytes.get());
       }
-      logger.info("finished, received {} bytes in total", receivedBytes.get());
     }
   }
 }
