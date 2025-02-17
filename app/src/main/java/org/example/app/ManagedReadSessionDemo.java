@@ -33,9 +33,13 @@ public class ManagedReadSessionDemo {
       throw new IllegalStateException("S2_STREAM not set");
     }
 
-    var config = Config.newBuilder(authToken).withEndpoints(Endpoints.fromEnvironment()).build();
+    var config =
+        Config.newBuilder(authToken)
+            .withEndpoints(Endpoints.fromEnvironment())
+            .withCompression(true)
+            .build();
 
-    try (final var executor = new ScheduledThreadPoolExecutor(1);
+    try (final var executor = new ScheduledThreadPoolExecutor(12);
         final var channel = ManagedChannelFactory.forBasinOrStreamService(config, basinName)) {
 
       final var streamClient =
@@ -47,7 +51,7 @@ public class ManagedReadSessionDemo {
       try (final var managedSession =
           streamClient.managedReadSession(
               ReadSessionRequest.newBuilder().withReadLimit(ReadLimit.count(100_000)).build(),
-              1024 * 1024 * 1024)) {
+              1024 * 1024 * 1024 * 5)) {
 
         AtomicLong receivedBytes = new AtomicLong();
         while (!managedSession.isClosed()) {

@@ -1,3 +1,9 @@
 package s2.types;
 
-public record NextSeqNum(long value) implements ReadOutput {}
+public final class NextSeqNum implements ReadOutput {
+  public final long value;
+
+  public NextSeqNum(long value) {
+    this.value = value;
+  }
+}

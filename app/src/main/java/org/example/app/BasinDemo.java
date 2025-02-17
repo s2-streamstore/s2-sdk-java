@@ -22,12 +22,10 @@ public class BasinDemo {
     try (final var basinClient =
         BasinClient.newBuilder(config, System.getenv("S2_BASIN")).build()) {
       final var streams = basinClient.listStreams(ListStreamsRequest.newBuilder().build()).get();
-      streams
-          .elems()
-          .forEach(
-              stream -> {
-                logger.info("stream={}", stream);
-              });
+      streams.elems.forEach(
+          stream -> {
+            logger.info("stream={}", stream);
+          });
 
       var newStream =
           basinClient

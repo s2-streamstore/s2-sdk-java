@@ -8,6 +8,7 @@ import io.grpc.stub.MetadataUtils;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
@@ -61,7 +62,9 @@ public class Client extends BaseClient {
                 resp ->
                     new Paginated<>(
                         resp.getHasMore(),
-                        resp.getBasinsList().stream().map(BasinInfo::fromProto).toList()),
+                        resp.getBasinsList().stream()
+                            .map(BasinInfo::fromProto)
+                            .collect(Collectors.toList())),
                 executor));
   }
 

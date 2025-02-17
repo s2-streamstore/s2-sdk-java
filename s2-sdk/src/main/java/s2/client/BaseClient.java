@@ -52,10 +52,14 @@ public abstract class BaseClient implements AutoCloseable {
   }
 
   static boolean retryableStatus(Status status) {
-    return switch (status.getCode()) {
-      case UNKNOWN, DEADLINE_EXCEEDED, UNAVAILABLE -> true;
-      default -> false;
-    };
+    switch (status.getCode()) {
+      case UNKNOWN:
+      case DEADLINE_EXCEEDED:
+      case UNAVAILABLE:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public void close() {

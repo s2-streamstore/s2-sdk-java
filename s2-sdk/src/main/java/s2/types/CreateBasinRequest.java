@@ -26,7 +26,7 @@ public class CreateBasinRequest {
     return builder.build();
   }
 
-  abstract static sealed class BasinAssignment permits Scope, Cell {
+  abstract static class BasinAssignment {
     public final String value;
 
     BasinAssignment(String value) {

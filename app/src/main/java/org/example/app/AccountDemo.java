@@ -26,7 +26,7 @@ public class AccountDemo {
     try (var client = Client.newBuilder(config).build()) {
 
       var basins = client.listBasins(ListBasinsRequest.newBuilder().build()).get();
-      basins.elems().forEach(basin -> logger.info("basin={}", basin));
+      basins.elems.forEach(basin -> logger.info("basin={}", basin));
 
       var newBasin =
           client

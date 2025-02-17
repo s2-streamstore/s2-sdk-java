@@ -24,7 +24,7 @@ public class AppendRecord implements MeteredBytes, Serializable {
   public long meteredBytes() {
     return 8
         + (2L * this.headers.size())
-        + this.headers.stream().map(h -> h.name().size() + h.value().size()).reduce(0, Integer::sum)
+        + this.headers.stream().map(h -> h.name.size() + h.value.size()).reduce(0, Integer::sum)
         + this.body.size();
   }
 

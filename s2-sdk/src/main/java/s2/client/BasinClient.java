@@ -8,6 +8,7 @@ import io.grpc.stub.MetadataUtils;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import s2.auth.BearerTokenCallCredentials;
 import s2.channel.BasinCompatibleChannel;
 import s2.channel.ManagedChannelFactory;
@@ -66,7 +67,9 @@ public class BasinClient extends BaseClient {
                 resp ->
                     new Paginated<>(
                         resp.getHasMore(),
-                        resp.getStreamsList().stream().map(StreamInfo::fromProto).toList()),
+                        resp.getStreamsList().stream()
+                            .map(StreamInfo::fromProto)
+                            .collect(Collectors.toList())),
                 executor));
   }
 
