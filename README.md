@@ -12,7 +12,7 @@ A Java SDK for interacting with the S2 streaming service.
 
 ## Prerequisites
 
-- Java 17 or higher
+- Java 11 or higher
 - Gradle 8.5 or higher
 - An S2 account and bearer token
 
