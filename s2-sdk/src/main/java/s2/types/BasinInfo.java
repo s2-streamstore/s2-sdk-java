@@ -36,6 +36,3 @@ public class BasinInfo {
     return new BasinInfo(basinInfo.getName(), basinInfo.getScope(), basinInfo.getCell(), state);
   }
 }
-
-// public record BasinInfo(String name, String scope, String cell, BasinState state) {
-// }

@@ -160,7 +160,7 @@ public class StreamClient extends BasinClient {
    * Append a batch of records to a stream, using the unary append RPC.
    *
    * <p>Note that the choice of {@link Config#appendRetryPolicy} is important. Since appends are not
-   * idempotent by default, retries <i>could</i> cause duplicates in a stream. If you use-case
+   * idempotent by default, retries <i>could</i> cause duplicates in a stream. If your use-case
    * cannot tolerate the potential of duplicate records, make sure to select {@link
    * AppendRetryPolicy#NO_SIDE_EFFECTS}.
    *
