@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"s2.auth"},{"l":"s2.channel"},{"l":"s2.client"},{"l":"s2.config"},{"l":"s2.types"},{"l":"s2.utils"}]
