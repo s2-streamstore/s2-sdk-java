@@ -48,7 +48,8 @@ public final class Endpoints {
   }
 
   public boolean singleEndpoint() {
-    if (this.basin instanceof Direct direct) {
+    if (this.basin instanceof Direct) {
+      final Direct direct = (Direct) this.basin;
       return this.account.equals(direct.address);
     } else if (this.basin instanceof ParentZone) {
       return false;

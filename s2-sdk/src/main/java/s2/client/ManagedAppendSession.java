@@ -179,7 +179,8 @@ public class ManagedAppendSession implements AutoCloseable {
         throw Status.CANCELLED
             .withDescription("hit deadline while retransmitting")
             .asRuntimeException();
-      } else if (notification instanceof Ack ack) {
+      } else if (notification instanceof Ack) {
+        final Ack ack = (Ack) notification;
         this.remainingAttempts.set(this.client.config.maxRetries);
         var correspondingInflight = inflightQueue.poll();
         if (correspondingInflight == null) {
@@ -187,9 +188,10 @@ public class ManagedAppendSession implements AutoCloseable {
         } else {
           validate(correspondingInflight, ack.output);
           correspondingInflight.callback.set(ack.output);
-          this.inflightBytes.release(correspondingInflight.meteredBytes.intValue());
+          this.inflightBytes.release((int) correspondingInflight.meteredBytes);
         }
-      } else if (notification instanceof Error error) {
+      } else if (notification instanceof Error) {
+        final Error error = (Error) notification;
         throw new RuntimeException(error.throwable);
       } else {
         throw Status.INTERNAL
@@ -218,7 +220,8 @@ public class ManagedAppendSession implements AutoCloseable {
     // through them and cancel any pending batches via their callback.
     while (!notificationQueue.isEmpty()) {
       var entry = notificationQueue.poll();
-      if (entry instanceof Batch batch) {
+      if (entry instanceof Batch) {
+        final Batch batch = (Batch) entry;
         batch.input.callback.setException(fatal.asRuntimeException());
       }
     }
@@ -228,7 +231,7 @@ public class ManagedAppendSession implements AutoCloseable {
   }
 
   private void validate(InflightRecord record, AppendOutput output) {
-    var numRecordsForAcknowledgement = output.endSeqNum() - output.startSeqNum();
+    var numRecordsForAcknowledgement = output.endSeqNum - output.startSeqNum;
     if (numRecordsForAcknowledgement != record.input.records.size()) {
       throw Status.INTERNAL
           .withDescription(
@@ -287,7 +290,8 @@ public class ManagedAppendSession implements AutoCloseable {
           clientObserver.onError(Status.CANCELLED.asRuntimeException());
           throw Status.CANCELLED.asRuntimeException();
         }
-      } else if (notification instanceof Batch batch) {
+      } else if (notification instanceof Batch) {
+        final Batch batch = (Batch) notification;
         logger.debug("notification=BATCH");
         if (!inflightQueue.offer(batch.input)) {
           throw Status.INTERNAL.asRuntimeException();
@@ -304,7 +308,8 @@ public class ManagedAppendSession implements AutoCloseable {
                       + TimeUnit.NANOSECONDS.convert(this.client.config.requestTimeout)));
         }
 
-      } else if (notification instanceof Ack ack) {
+      } else if (notification instanceof Ack) {
+        final Ack ack = (Ack) notification;
         logger.debug("notification=ACK");
         this.remainingAttempts.set(this.client.config.maxRetries);
         var correspondingInflight = inflightQueue.poll();
@@ -313,7 +318,7 @@ public class ManagedAppendSession implements AutoCloseable {
         } else {
           validate(correspondingInflight, ack.output);
           correspondingInflight.callback.set(ack.output);
-          this.inflightBytes.release(correspondingInflight.meteredBytes.intValue());
+          this.inflightBytes.release((int) correspondingInflight.meteredBytes);
 
           // Reset the next deadline.
           this.nextDeadlineSystemNanos.set(
@@ -323,18 +328,20 @@ public class ManagedAppendSession implements AutoCloseable {
                           entry.entryNanos
                               + TimeUnit.NANOSECONDS.convert(this.client.config.requestTimeout)));
         }
-      } else if (notification instanceof Error error) {
+      } else if (notification instanceof Error) {
+        final Error error = (Error) notification;
         logger.debug("notification=ERROR");
         clientObserver.onError(Status.CANCELLED.asRuntimeException());
         throw new RuntimeException(error.throwable);
 
-      } else if (notification instanceof ClientClose close) {
+      } else if (notification instanceof ClientClose) {
+        final ClientClose close = (ClientClose) notification;
         logger.debug("notification=CLIENT_CLOSE,gracefully={}", close.gracefully);
         clientObserver.onCompleted();
         if (!close.gracefully) {
           return null;
         }
-      } else if (notification instanceof ServerClose close) {
+      } else if (notification instanceof ServerClose) {
         logger.debug("notification=SERVER_CLOSE");
         if (acceptingAppends.get() || !inflightQueue.isEmpty() || !notificationQueue.isEmpty()) {
           throw Status.INTERNAL
@@ -363,25 +370,63 @@ public class ManagedAppendSession implements AutoCloseable {
     return daemon;
   }
 
-  sealed interface Notification permits Ack, Batch, ClientClose, Error, ServerClose {}
+  static class InflightRecord {
+    final AppendInput input;
+    final long entryNanos;
+    final SettableFuture<AppendOutput> callback;
+    final long meteredBytes;
 
-  record InflightRecord(
-      AppendInput input,
-      Long entryNanos,
-      SettableFuture<AppendOutput> callback,
-      Long meteredBytes) {
+    InflightRecord(
+        AppendInput input,
+        long entryNanos,
+        SettableFuture<AppendOutput> callback,
+        long meteredBytes) {
+      this.input = input;
+      this.entryNanos = entryNanos;
+      this.callback = callback;
+      this.meteredBytes = meteredBytes;
+    }
+
     static InflightRecord construct(AppendInput input, Long meteredBytes) {
       return new InflightRecord(input, System.nanoTime(), SettableFuture.create(), meteredBytes);
     }
   }
 
-  record Batch(InflightRecord input) implements Notification {}
+  interface Notification {}
 
-  record Ack(AppendOutput output) implements Notification {}
+  class Ack implements Notification {
+    final AppendOutput output;
 
-  record Error(Throwable throwable) implements Notification {}
+    Ack(AppendOutput output) {
+      this.output = output;
+    }
+  }
 
-  record ClientClose(boolean gracefully) implements Notification {}
+  class Batch implements Notification {
+    final InflightRecord input;
 
-  record ServerClose() implements Notification {}
+    Batch(InflightRecord input) {
+      this.input = input;
+    }
+  }
+
+  class ClientClose implements Notification {
+    final boolean gracefully;
+
+    ClientClose(boolean gracefully) {
+      this.gracefully = gracefully;
+    }
+  }
+
+  class Error implements Notification {
+    final Throwable throwable;
+
+    Error(Throwable throwable) {
+      this.throwable = throwable;
+    }
+  }
+
+  class ServerClose implements Notification {
+    ServerClose() {}
+  }
 }

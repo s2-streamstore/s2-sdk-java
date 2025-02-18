@@ -1,3 +1,10 @@
 package s2.types;
 
-public record FirstSeqNum(long value) implements ReadOutput {}
+public final class FirstSeqNum implements ReadOutput {
+
+  public final long value;
+
+  public FirstSeqNum(long value) {
+    this.value = value;
+  }
+}

@@ -2,7 +2,7 @@ package s2.config;
 
 import java.util.Objects;
 
-public abstract sealed class BasinEndpoint permits ParentZone, Direct {
+public abstract class BasinEndpoint {
   public final Address address;
 
   BasinEndpoint(Address address) {

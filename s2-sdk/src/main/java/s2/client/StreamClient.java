@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import s2.auth.BearerTokenCallCredentials;
 import s2.channel.BasinCompatibleChannel;
 import s2.channel.ManagedChannelFactory;
+import s2.config.AppendRetryPolicy;
 import s2.config.Config;
 import s2.types.AppendInput;
 import s2.types.AppendOutput;
@@ -21,6 +22,7 @@ import s2.types.ReadOutput;
 import s2.types.ReadRequest;
 import s2.types.ReadSessionRequest;
 import s2.v1alpha.AppendRequest;
+import s2.v1alpha.AppendResponse;
 import s2.v1alpha.AppendSessionRequest;
 import s2.v1alpha.AppendSessionResponse;
 import s2.v1alpha.CheckTailRequest;
@@ -97,7 +99,7 @@ public class StreamClient extends BasinClient {
   /**
    * Retrieve a batch of records from a stream, using the unary read RPC.
    *
-   * @see s2.client.StreamClient#readSession
+   * @see StreamClient#readSession
    * @param request the request
    * @return future of the read result
    */
@@ -115,14 +117,13 @@ public class StreamClient extends BasinClient {
    * Retrieve batches of records from a stream continuously.
    *
    * <p>This entryway into a read session does internally perform retries (if configured via {@link
-   * s2.config.Config#maxRetries}). It does not handle any form of backpressure or flow control
-   * directly.
+   * Config#maxRetries}). It does not handle any form of backpressure or flow control directly.
    *
    * <p>The stream is interacted with via callbacks, which delegate to an underlying GRPC <a
    * href="https://grpc.github.io/grpc-java/javadoc/io/grpc/stub/StreamObserver.html">StreamObserver</a>
    * class.
    *
-   * @see s2.client.StreamClient#managedReadSession
+   * @see StreamClient#managedReadSession
    * @param request the request
    * @param onResponse function to run, sequentially, on each successful message
    * @param onError function to run on an error
@@ -136,15 +137,15 @@ public class StreamClient extends BasinClient {
   /**
    * Retrieve batches of records from a stream continuously, using a buffered queue-backed iterator.
    *
-   * <p>This entryway into a read session, similar to {@link s2.client.StreamClient#readSession},
-   * will retry internally if configured.
+   * <p>This entryway into a read session, similar to {@link StreamClient#readSession}, will retry
+   * internally if configured.
    *
    * <p>The GRPC streaming response will be buffered, based on the `maxBufferedBytes` param,
    * preventing situations where the result of a read accumulate faster than a user can handle.
    *
    * <p>Results are interacted with via an interator-like API, rather than via callbacks.
    *
-   * @see s2.client.StreamClient#readSession
+   * @see StreamClient#readSession
    * @param request the request
    * @param maxBufferedBytes the max allowed amount of read response metered bytes to keep in the
    *     buffer
@@ -158,35 +159,40 @@ public class StreamClient extends BasinClient {
   /**
    * Append a batch of records to a stream, using the unary append RPC.
    *
-   * <p>Note that the choice of {@link s2.config.Config#appendRetryPolicy} is important. Since
-   * appends are not idempotent by default, retries <i>could</i> cause duplicates in a stream. If
-   * you use-case cannot tolerate the potential of duplicate records, make sure to select {@link
-   * s2.config.AppendRetryPolicy#NO_SIDE_EFFECTS}.
+   * <p>Note that the choice of {@link Config#appendRetryPolicy} is important. Since appends are not
+   * idempotent by default, retries <i>could</i> cause duplicates in a stream. If your use-case
+   * cannot tolerate the potential of duplicate records, make sure to select {@link
+   * AppendRetryPolicy#NO_SIDE_EFFECTS}.
    *
-   * @see s2.config.Config#appendRetryPolicy
-   * @see s2.config.AppendRetryPolicy
+   * @see Config#appendRetryPolicy
+   * @see AppendRetryPolicy
    * @param request the request
    * @return future of the append response
    */
   public ListenableFuture<AppendOutput> append(AppendInput request) {
+    ListenableFuture<AppendResponse> future;
+    switch (config.appendRetryPolicy) {
+      case ALL:
+        future =
+            withStaticRetries(
+                config.maxRetries,
+                () ->
+                    this.futureStub.append(
+                        AppendRequest.newBuilder().setInput(request.toProto(streamName)).build()));
+        break;
+      case NO_SIDE_EFFECTS:
+        future =
+            this.futureStub.append(
+                AppendRequest.newBuilder().setInput(request.toProto(streamName)).build());
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            "Unsupported append retry policy: " + config.appendRetryPolicy);
+    }
     return withTimeout(
         () ->
             Futures.transform(
-                switch (config.appendRetryPolicy) {
-                  case ALL ->
-                      withStaticRetries(
-                          config.maxRetries,
-                          () ->
-                              this.futureStub.append(
-                                  AppendRequest.newBuilder()
-                                      .setInput(request.toProto(streamName))
-                                      .build()));
-                  case NO_SIDE_EFFECTS ->
-                      this.futureStub.append(
-                          AppendRequest.newBuilder().setInput(request.toProto(streamName)).build());
-                },
-                response -> AppendOutput.fromProto(response.getOutput()),
-                executor));
+                future, response -> AppendOutput.fromProto(response.getOutput()), executor));
   }
 
   /**
@@ -243,13 +249,13 @@ public class StreamClient extends BasinClient {
    * <p>Unlike with {@link StreamClient#appendSession}, this session will attempt to retry
    * intermittent failures if so elected.
    *
-   * <p>Note that the choice of {@link s2.config.Config#appendRetryPolicy} is important. Since
-   * appends are not idempotent by default, retries <i>could</i> cause duplicates in a stream. If
-   * you use-case cannot tolerate the potential of duplicate records, make sure to select {@link
-   * s2.config.AppendRetryPolicy#NO_SIDE_EFFECTS}.
+   * <p>Note that the choice of {@link Config#appendRetryPolicy} is important. Since appends are not
+   * idempotent by default, retries <i>could</i> cause duplicates in a stream. If you use-case
+   * cannot tolerate the potential of duplicate records, make sure to select {@link
+   * AppendRetryPolicy#NO_SIDE_EFFECTS}.
    *
-   * @see s2.config.Config#appendRetryPolicy
-   * @see s2.config.AppendRetryPolicy
+   * @see Config#appendRetryPolicy
+   * @see AppendRetryPolicy
    * @return the managed append session
    */
   public ManagedAppendSession managedAppendSession() {
@@ -293,6 +299,16 @@ public class StreamClient extends BasinClient {
     }
   }
 
-  public record AppendSessionRequestStream(
-      Consumer<AppendInput> onNext, Consumer<Throwable> onError, Runnable onComplete) {}
+  public static class AppendSessionRequestStream {
+    final Consumer<AppendInput> onNext;
+    final Consumer<Throwable> onError;
+    final Runnable onComplete;
+
+    AppendSessionRequestStream(
+        Consumer<AppendInput> onNext, Consumer<Throwable> onError, Runnable onComplete) {
+      this.onNext = onNext;
+      this.onError = onError;
+      this.onComplete = onComplete;
+    }
+  }
 }

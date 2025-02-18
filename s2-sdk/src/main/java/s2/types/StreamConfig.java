@@ -2,6 +2,7 @@ package s2.types;
 
 import java.time.Duration;
 import java.util.Optional;
+import s2.v1alpha.StreamConfig.RetentionPolicyCase;
 
 public class StreamConfig {
 
@@ -14,18 +15,27 @@ public class StreamConfig {
   }
 
   public static StreamConfig fromProto(s2.v1alpha.StreamConfig proto) {
-    var storageClass =
-        switch (proto.getStorageClass()) {
-          case STORAGE_CLASS_UNSPECIFIED -> StorageClass.UNSPECIFIED;
-          case STORAGE_CLASS_STANDARD -> StorageClass.STANDARD;
-          case STORAGE_CLASS_EXPRESS -> StorageClass.EXPRESS;
-          default -> StorageClass.UNKNOWN;
-        };
-    Optional<RetentionPolicy> retentionPolicy =
-        switch (proto.getRetentionPolicyCase()) {
-          case AGE -> Optional.of(new Age(Duration.ofSeconds(proto.getAge())));
-          case RETENTIONPOLICY_NOT_SET -> Optional.empty();
-        };
+    StorageClass storageClass;
+    switch (proto.getStorageClass()) {
+      case STORAGE_CLASS_UNSPECIFIED:
+        storageClass = StorageClass.UNSPECIFIED;
+        break;
+      case STORAGE_CLASS_STANDARD:
+        storageClass = StorageClass.STANDARD;
+        break;
+      case STORAGE_CLASS_EXPRESS:
+        storageClass = StorageClass.EXPRESS;
+        break;
+      default:
+        storageClass = StorageClass.UNKNOWN;
+        break;
+    }
+
+    Optional<RetentionPolicy> retentionPolicy = Optional.empty();
+
+    if (proto.getRetentionPolicyCase() == RetentionPolicyCase.AGE) {
+      retentionPolicy = Optional.of(new Age(Duration.ofSeconds(proto.getAge())));
+    }
     return new StreamConfig(storageClass, retentionPolicy);
   }
 

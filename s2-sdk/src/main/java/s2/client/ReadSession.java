@@ -84,10 +84,11 @@ public class ReadSession implements AutoCloseable {
         readSessionInner(
             request.update(nextStartSeqNum.get(), consumedRecords.get(), consumedBytes.get()),
             resp -> {
-              if (resp instanceof Batch batch) {
+              if (resp instanceof Batch) {
+                final Batch batch = (Batch) resp;
                 var lastRecordIdx = batch.lastSeqNum();
                 lastRecordIdx.ifPresent(v -> nextStartSeqNum.set(v + 1));
-                consumedRecords.addAndGet(batch.sequencedRecordBatch().records().size());
+                consumedRecords.addAndGet(batch.sequencedRecordBatch.records.size());
                 consumedBytes.addAndGet(batch.meteredBytes());
               }
               this.remainingAttempts.set(client.config.maxRetries);

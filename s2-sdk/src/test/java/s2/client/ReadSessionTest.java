@@ -9,6 +9,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,10 +80,10 @@ public class ReadSessionTest {
     System.out.println(received);
     var flattenedRecords =
         received.stream()
-            .flatMap(o -> ((Batch) o).sequencedRecordBatch().records().stream())
-            .toList();
+            .flatMap(o -> ((Batch) o).sequencedRecordBatch.records.stream())
+            .collect(Collectors.toList());
     assertThat(flattenedRecords.size()).isEqualTo(25);
     IntStream.range(0, flattenedRecords.size())
-        .forEach(i -> assertThat(flattenedRecords.get(i).seqNum()).isEqualTo(i));
+        .forEach(i -> assertThat(flattenedRecords.get(i).seqNum).isEqualTo(i));
   }
 }

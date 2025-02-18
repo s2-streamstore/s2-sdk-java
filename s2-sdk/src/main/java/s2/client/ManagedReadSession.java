@@ -26,7 +26,8 @@ public class ManagedReadSession implements AutoCloseable {
             readSessionRequest,
             resp -> {
               try {
-                if (resp instanceof Batch batch) {
+                if (resp instanceof Batch) {
+                  final Batch batch = (Batch) resp;
                   bufferAvailable.acquire((int) batch.meteredBytes());
                 }
                 queue.put(new DataItem(resp));
@@ -74,7 +75,8 @@ public class ManagedReadSession implements AutoCloseable {
     var nextRead =
         readItem.flatMap(
             elem -> {
-              if (elem instanceof ErrorItem item) {
+              if (elem instanceof ErrorItem) {
+                final ErrorItem item = (ErrorItem) elem;
                 throw new RuntimeException(item.error);
               } else if (elem instanceof EndItem) {
                 return Optional.empty();
@@ -83,7 +85,7 @@ public class ManagedReadSession implements AutoCloseable {
               }
             });
     nextRead
-        .map(nr -> (nr instanceof Batch batch) ? (int) batch.meteredBytes() : 0)
+        .map(nr -> (nr instanceof Batch) ? (int) ((Batch) nr).meteredBytes() : 0)
         .ifPresent(bufferAvailable::release);
     return nextRead;
   }
@@ -98,11 +100,26 @@ public class ManagedReadSession implements AutoCloseable {
     this.readSession.close();
   }
 
-  private sealed interface ReadItem permits DataItem, ErrorItem, EndItem {}
+  interface ReadItem {}
+  ;
 
-  record DataItem(ReadOutput readOutput) implements ReadItem {}
+  static class DataItem implements ReadItem {
+    final ReadOutput readOutput;
 
-  record ErrorItem(Throwable error) implements ReadItem {}
+    DataItem(ReadOutput readOutput) {
+      this.readOutput = readOutput;
+    }
+  }
 
-  record EndItem() implements ReadItem {}
+  static class ErrorItem implements ReadItem {
+    final Throwable error;
+
+    ErrorItem(Throwable error) {
+      this.error = error;
+    }
+  }
+
+  static class EndItem implements ReadItem {
+    EndItem() {}
+  }
 }
