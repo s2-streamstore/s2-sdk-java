@@ -7,7 +7,7 @@
     </encoder>
   </appender>
 
-  <logger additivity="false" level="info" name="s2">
+  <logger additivity="false" level="trace" name="s2">
     <appender-ref ref="console"/>
   </logger>
 
