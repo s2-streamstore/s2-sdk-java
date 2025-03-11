@@ -22,6 +22,8 @@ public class ReadSession implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(ReadSession.class.getName());
 
+  private static final Long HEARTBEAT_THRESHOLD_NANOS = TimeUnit.SECONDS.toNanos(20);
+
   final ScheduledExecutorService executor;
   final StreamClient client;
 
@@ -32,7 +34,6 @@ public class ReadSession implements AutoCloseable {
 
   // Liveness timer.
   final AtomicLong lastEvent;
-  final boolean enforceLiveness;
   final ListenableFuture<Void> livenessDaemon;
 
   final Consumer<ReadOutput> onResponse;
@@ -54,8 +55,8 @@ public class ReadSession implements AutoCloseable {
     this.nextStartSeqNum = new AtomicLong(request.startSeqNum);
     this.remainingAttempts = new AtomicInteger(client.config.maxRetries);
     this.lastEvent = new AtomicLong(System.nanoTime());
-    this.enforceLiveness = request.heartbeats;
-    this.livenessDaemon = this.enforceLiveness ? livenessDaemon() : Futures.immediateFuture(null);
+
+    this.livenessDaemon = request.heartbeats ? livenessDaemon() : Futures.immediateFuture(null);
     this.daemon = this.retrying();
   }
 
@@ -81,7 +82,6 @@ public class ReadSession implements AutoCloseable {
           @Override
           public void onError(Throwable t) {
             logger.debug("Read session onError={}", t.toString());
-            livenessDaemon.cancel(true);
             fut.setException(t);
           }
 
@@ -102,12 +102,11 @@ public class ReadSession implements AutoCloseable {
   }
 
   private void scheduleLivenessCheck(SettableFuture<Void> livenessFuture) {
-    long thresholdNanos = TimeUnit.SECONDS.toNanos(20);
-    long now = System.nanoTime();
-    long last = lastEvent.get();
-    long delay = (last + thresholdNanos) - now;
+    final long delay = (lastEvent.get() + HEARTBEAT_THRESHOLD_NANOS) - System.nanoTime();
 
-    logger.trace("Checking liveness. now={}, last={}, delay={}", now, last, delay);
+    logger.trace(
+        "Checking liveness. Next deadline: {} seconds.",
+        TimeUnit.SECONDS.convert(delay, TimeUnit.NANOSECONDS));
     if (delay <= 0) {
       this.onError.accept(
           Status.DEADLINE_EXCEEDED
@@ -116,7 +115,6 @@ public class ReadSession implements AutoCloseable {
       this.daemon.cancel(true);
       livenessFuture.set(null);
     } else {
-      // Schedule the next check.
       ScheduledFuture<?> scheduledCheck =
           executor.schedule(
               () -> {
@@ -161,6 +159,7 @@ public class ReadSession implements AutoCloseable {
           } else {
             logger.warn("readSession failed, status={}", status.getCode());
             onError.accept(t);
+            this.livenessDaemon.cancel(true);
             return Futures.immediateFuture(null);
           }
         },
@@ -173,6 +172,7 @@ public class ReadSession implements AutoCloseable {
 
   @Override
   public void close() {
+    this.livenessDaemon.cancel(true);
     this.daemon.cancel(true);
   }
 }
