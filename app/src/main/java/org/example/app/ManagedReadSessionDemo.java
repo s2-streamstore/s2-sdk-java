@@ -10,7 +10,6 @@ import s2.client.StreamClient;
 import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.Batch;
-import s2.types.ReadLimit;
 import s2.types.ReadSessionRequest;
 
 public class ManagedReadSessionDemo {
@@ -50,7 +49,7 @@ public class ManagedReadSessionDemo {
 
       try (final var managedSession =
           streamClient.managedReadSession(
-              ReadSessionRequest.newBuilder().withReadLimit(ReadLimit.count(100_000)).build(),
+              ReadSessionRequest.newBuilder().withHeartbeats(true).build(),
               1024 * 1024 * 1024 * 5)) {
 
         AtomicLong receivedBytes = new AtomicLong();

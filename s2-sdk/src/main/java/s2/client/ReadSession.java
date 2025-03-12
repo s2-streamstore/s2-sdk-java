@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -20,6 +22,8 @@ public class ReadSession implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(ReadSession.class.getName());
 
+  private static final Long HEARTBEAT_THRESHOLD_NANOS = TimeUnit.SECONDS.toNanos(20);
+
   final ScheduledExecutorService executor;
   final StreamClient client;
 
@@ -27,6 +31,10 @@ public class ReadSession implements AutoCloseable {
   final AtomicLong consumedRecords = new AtomicLong();
   final AtomicLong consumedBytes = new AtomicLong(0);
   final AtomicInteger remainingAttempts;
+
+  // Liveness timer.
+  final AtomicLong lastEvent;
+  final ListenableFuture<Void> livenessDaemon;
 
   final Consumer<ReadOutput> onResponse;
   final Consumer<Throwable> onError;
@@ -46,6 +54,9 @@ public class ReadSession implements AutoCloseable {
     this.request = request;
     this.nextStartSeqNum = new AtomicLong(request.startSeqNum);
     this.remainingAttempts = new AtomicInteger(client.config.maxRetries);
+    this.lastEvent = new AtomicLong(System.nanoTime());
+
+    this.livenessDaemon = request.heartbeats ? livenessDaemon() : Futures.immediateFuture(null);
     this.daemon = this.retrying();
   }
 
@@ -60,7 +71,12 @@ public class ReadSession implements AutoCloseable {
 
           @Override
           public void onNext(ReadSessionResponse value) {
-            innerOnResponse.accept(ReadOutput.fromProto(value.getOutput()));
+            lastEvent.set(System.nanoTime());
+            if (value.hasOutput()) {
+              innerOnResponse.accept(ReadOutput.fromProto(value.getOutput()));
+            } else {
+              logger.trace("heartbeat");
+            }
           }
 
           @Override
@@ -72,10 +88,46 @@ public class ReadSession implements AutoCloseable {
           @Override
           public void onCompleted() {
             logger.debug("Read session inner onCompleted");
+            livenessDaemon.cancel(true);
             fut.set(null);
           }
         });
     return fut;
+  }
+
+  private ListenableFuture<Void> livenessDaemon() {
+    SettableFuture<Void> livenessFuture = SettableFuture.create();
+    scheduleLivenessCheck(livenessFuture);
+    return livenessFuture;
+  }
+
+  private void scheduleLivenessCheck(SettableFuture<Void> livenessFuture) {
+    final long delay = (lastEvent.get() + HEARTBEAT_THRESHOLD_NANOS) - System.nanoTime();
+
+    logger.trace(
+        "Checking liveness. Next deadline: {} seconds.",
+        TimeUnit.SECONDS.convert(delay, TimeUnit.NANOSECONDS));
+    if (delay <= 0) {
+      this.onError.accept(
+          Status.DEADLINE_EXCEEDED
+              .withDescription("ReadSession hit local heartbeat deadline")
+              .asRuntimeException());
+      this.daemon.cancel(true);
+      livenessFuture.set(null);
+    } else {
+      ScheduledFuture<?> scheduledCheck =
+          executor.schedule(
+              () -> {
+                if (livenessFuture.isDone()) {
+                  return;
+                }
+                scheduleLivenessCheck(livenessFuture);
+              },
+              delay,
+              TimeUnit.NANOSECONDS);
+
+      livenessFuture.addListener(() -> scheduledCheck.cancel(true), executor);
+    }
   }
 
   private ListenableFuture<Void> retrying() {
@@ -107,6 +159,7 @@ public class ReadSession implements AutoCloseable {
           } else {
             logger.warn("readSession failed, status={}", status.getCode());
             onError.accept(t);
+            this.livenessDaemon.cancel(true);
             return Futures.immediateFuture(null);
           }
         },
@@ -119,6 +172,7 @@ public class ReadSession implements AutoCloseable {
 
   @Override
   public void close() {
+    this.livenessDaemon.cancel(true);
     this.daemon.cancel(true);
   }
 }
