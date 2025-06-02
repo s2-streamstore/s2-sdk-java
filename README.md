@@ -4,8 +4,8 @@ A Java SDK for interacting with the S2 streaming service.
 
 #### Current Java API Documentation
 
-- [s2-sdk @ 0.0.14](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-sdk/0.0.14/)
-- [s2-internal @ 0.0.14](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-internal/0.0.14/)
+- [s2-sdk @ 0.0.15](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-sdk/0.0.15/)
+- [s2-internal @ 0.0.15](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-internal/0.0.15/)
 
 ## Prerequisites
 
