@@ -5,8 +5,6 @@ public interface ReadOutput {
     switch (readOutput.getOutputCase()) {
       case BATCH:
         return new Batch(SequencedRecordBatch.fromProto(readOutput.getBatch()));
-      case FIRST_SEQ_NUM:
-        return new FirstSeqNum(readOutput.getFirstSeqNum());
       case NEXT_SEQ_NUM:
         return new NextSeqNum(readOutput.getNextSeqNum());
     }

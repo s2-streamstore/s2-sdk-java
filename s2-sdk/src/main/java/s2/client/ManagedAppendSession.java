@@ -57,6 +57,10 @@ public class ManagedAppendSession implements AutoCloseable {
     this.remainingAttempts = new AtomicInteger(this.client.config.maxRetries);
   }
 
+  public Integer remainingBufferCapacityBytes() {
+    return this.inflightBytes.availablePermits();
+  }
+
   private ListenableFuture<Void> retryingDaemon() {
     return Futures.catchingAsync(
         executor.submit(this::daemon),
@@ -370,6 +374,8 @@ public class ManagedAppendSession implements AutoCloseable {
     return daemon;
   }
 
+  interface Notification {}
+
   static class InflightRecord {
     final AppendInput input;
     final long entryNanos;
@@ -391,8 +397,6 @@ public class ManagedAppendSession implements AutoCloseable {
       return new InflightRecord(input, System.nanoTime(), SettableFuture.create(), meteredBytes);
     }
   }
-
-  interface Notification {}
 
   class Ack implements Notification {
     final AppendOutput output;

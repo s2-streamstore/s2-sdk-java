@@ -56,8 +56,8 @@ public class CreateBasinRequest {
       return this;
     }
 
-    public CreateBasinRequestBuilder withDefaultStreamConfig(StreamConfig config) {
-      this.config = Optional.of(new BasinConfig(config));
+    public CreateBasinRequestBuilder withBasinConfig(BasinConfig config) {
+      this.config = Optional.of(config);
       return this;
     }
 
@@ -75,7 +75,7 @@ public class CreateBasinRequest {
       this.basin.ifPresent(BasinUtils::validateBasinName);
       return new CreateBasinRequest(
           this.basin,
-          this.config.orElse(new BasinConfig(StreamConfig.newBuilder().build())),
+          this.config.orElse(new BasinConfig(StreamConfig.newBuilder().build(), false, false)),
           this.assignment);
     }
   }

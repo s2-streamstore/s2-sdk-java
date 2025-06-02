@@ -101,7 +101,6 @@ public class ManagedReadSession implements AutoCloseable {
   }
 
   interface ReadItem {}
-  ;
 
   static class DataItem implements ReadItem {
     final ReadOutput readOutput;

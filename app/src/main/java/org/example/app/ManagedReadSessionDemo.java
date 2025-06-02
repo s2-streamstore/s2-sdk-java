@@ -11,6 +11,7 @@ import s2.config.Config;
 import s2.config.Endpoints;
 import s2.types.Batch;
 import s2.types.ReadSessionRequest;
+import s2.types.Start;
 
 public class ManagedReadSessionDemo {
 
@@ -19,11 +20,11 @@ public class ManagedReadSessionDemo {
 
   public static void main(String[] args) throws Exception {
 
-    final var authToken = System.getenv("S2_AUTH_TOKEN");
+    final var authToken = System.getenv("S2_ACCESS_TOKEN");
     final var basinName = System.getenv("S2_BASIN");
     final var streamName = System.getenv("S2_STREAM");
     if (authToken == null) {
-      throw new IllegalStateException("S2_AUTH_TOKEN not set");
+      throw new IllegalStateException("S2_ACCESS_TOKEN not set");
     }
     if (basinName == null) {
       throw new IllegalStateException("S2_BASIN not set");
@@ -32,11 +33,7 @@ public class ManagedReadSessionDemo {
       throw new IllegalStateException("S2_STREAM not set");
     }
 
-    var config =
-        Config.newBuilder(authToken)
-            .withEndpoints(Endpoints.fromEnvironment())
-            .withCompression(true)
-            .build();
+    var config = Config.newBuilder(authToken).withEndpoints(Endpoints.fromEnvironment()).build();
 
     try (final var executor = new ScheduledThreadPoolExecutor(12);
         final var channel = ManagedChannelFactory.forBasinOrStreamService(config, basinName)) {
@@ -49,7 +46,10 @@ public class ManagedReadSessionDemo {
 
       try (final var managedSession =
           streamClient.managedReadSession(
-              ReadSessionRequest.newBuilder().withHeartbeats(true).build(),
+              ReadSessionRequest.newBuilder()
+                  .withHeartbeats(true)
+                  .withStart(Start.seqNum(0))
+                  .build(),
               1024 * 1024 * 1024 * 5)) {
 
         AtomicLong receivedBytes = new AtomicLong();
@@ -61,10 +61,12 @@ public class ManagedReadSessionDemo {
                 if (elem instanceof Batch batch) {
                   var size = batch.meteredBytes();
                   logger.info(
-                      "batch of {} bytes, seqnums {}..={}",
+                      "batch of {} bytes, seqnums {}..={} / instants {}..={}",
                       size,
                       batch.firstSeqNum(),
-                      batch.lastSeqNum());
+                      batch.lastSeqNum(),
+                      batch.firstTimestamp(),
+                      batch.lastTimestamp());
                   receivedBytes.addAndGet(size);
                 } else {
                   logger.info("non batch received: {}", elem);

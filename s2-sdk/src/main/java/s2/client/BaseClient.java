@@ -55,6 +55,7 @@ public abstract class BaseClient implements AutoCloseable {
     switch (status.getCode()) {
       case UNKNOWN:
       case DEADLINE_EXCEEDED:
+      case RESOURCE_EXHAUSTED:
       case UNAVAILABLE:
         return true;
       default:
