@@ -99,7 +99,7 @@ For the demos discussed below, it will be helpful to create a new basin and stre
 Start by setting some environment variables in your shell.
 
 ```bash
-export S2_AUTH_TOKEN="MY-SECRET"
+export S2_ACCESS_TOKEN="MY-SECRET"
 export S2_BASIN="my-demo-java"
 export S2_STREAM="test/1"
 ```

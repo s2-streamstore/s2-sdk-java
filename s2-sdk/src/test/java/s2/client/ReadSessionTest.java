@@ -20,6 +20,7 @@ import s2.types.Batch;
 import s2.types.ReadLimit;
 import s2.types.ReadOutput;
 import s2.types.ReadSessionRequest;
+import s2.types.Start;
 import s2.v1alpha.StreamService.MockReadSessionStreamService;
 
 public class ReadSessionTest {
@@ -61,7 +62,7 @@ public class ReadSessionTest {
   public void testReadSession() throws Exception {
     ReadSessionRequest request =
         ReadSessionRequest.newBuilder()
-            .withStartSeqNum(0)
+            .withStart(Start.seqNum(0))
             .withReadLimit(ReadLimit.count(25))
             .build();
 

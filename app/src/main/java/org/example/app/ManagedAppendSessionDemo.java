@@ -25,12 +25,15 @@ public class ManagedAppendSessionDemo {
   private static final Logger logger =
       LoggerFactory.getLogger(ManagedAppendSessionDemo.class.getName());
 
+  // 512KiB
+  private static final Integer TARGET_BATCH_SIZE = 512 * 1024;
+
   public static void main(String[] args) throws Exception {
-    final var authToken = System.getenv("S2_AUTH_TOKEN");
+    final var authToken = System.getenv("S2_ACCESS_TOKEN");
     final var basinName = System.getenv("S2_BASIN");
     final var streamName = System.getenv("S2_STREAM");
     if (authToken == null) {
-      throw new IllegalStateException("S2_AUTH_TOKEN not set");
+      throw new IllegalStateException("S2_ACCESS_TOKEN not set");
     }
     if (basinName == null) {
       throw new IllegalStateException("S2_BASIN not set");
@@ -82,7 +85,16 @@ public class ManagedAppendSessionDemo {
           try {
             // Generate a record with approximately 10KiB of random text.
             var payload =
-                RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", 1024 * 10);
+                RandomASCIIStringGenerator.generateRandomASCIIString(i + " - ", TARGET_BATCH_SIZE);
+
+            while (futureAppendSession.remainingBufferCapacityBytes()
+                < (TARGET_BATCH_SIZE + payload.length())) {
+              // Crude backpressure mechanism; slow down the rate of payload creation by sleeping
+              // momentarily
+              // if we have hit the internal append buffer max size.
+              Thread.sleep(10);
+            }
+
             var append =
                 futureAppendSession.submit(
                     AppendInput.newBuilder()

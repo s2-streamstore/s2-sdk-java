@@ -20,7 +20,6 @@ import s2.types.BasinInfo;
 import s2.types.CreateBasinRequest;
 import s2.types.Paginated;
 import s2.types.ReconfigureBasinRequest;
-import s2.types.StreamConfig;
 import s2.v1alpha.AccountServiceGrpc;
 import s2.v1alpha.DeleteBasinRequest;
 import s2.v1alpha.GetBasinConfigRequest;
@@ -125,9 +124,7 @@ public class Client extends BaseClient {
                 withStaticRetries(
                     config.maxRetries,
                     () -> this.futureStub.reconfigureBasin(reconfigure.toProto())),
-                resp ->
-                    new BasinConfig(
-                        StreamConfig.fromProto(resp.getConfig().getDefaultStreamConfig())),
+                resp -> BasinConfig.fromProto(resp.getConfig()),
                 executor));
   }
 
@@ -146,9 +143,7 @@ public class Client extends BaseClient {
                     () ->
                         this.futureStub.getBasinConfig(
                             GetBasinConfigRequest.newBuilder().setBasin(basin).build())),
-                resp ->
-                    new BasinConfig(
-                        StreamConfig.fromProto(resp.getConfig().getDefaultStreamConfig())),
+                resp -> BasinConfig.fromProto(resp.getConfig()),
                 executor));
   }
 

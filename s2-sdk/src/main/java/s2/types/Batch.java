@@ -1,5 +1,6 @@
 package s2.types;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public final class Batch implements ReadOutput, MeteredBytes {
@@ -18,6 +19,19 @@ public final class Batch implements ReadOutput, MeteredBytes {
     if (!this.sequencedRecordBatch.records.isEmpty()) {
       return Optional.of(
           this.sequencedRecordBatch.records.get(sequencedRecordBatch.records.size() - 1).seqNum);
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  public Optional<Instant> firstTimestamp() {
+    return this.sequencedRecordBatch.records.stream().findFirst().map(sr -> sr.timestamp);
+  }
+
+  public Optional<Instant> lastTimestamp() {
+    if (!this.sequencedRecordBatch.records.isEmpty()) {
+      return Optional.of(
+          this.sequencedRecordBatch.records.get(sequencedRecordBatch.records.size() - 1).timestamp);
     } else {
       return Optional.empty();
     }

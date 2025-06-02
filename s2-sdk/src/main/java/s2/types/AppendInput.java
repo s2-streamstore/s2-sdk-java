@@ -1,6 +1,5 @@
 package s2.types;
 
-import com.google.protobuf.ByteString;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
@@ -8,10 +7,10 @@ import java.util.Optional;
 public class AppendInput implements MeteredBytes, Serializable {
   public final List<AppendRecord> records;
   public final Optional<Long> matchSeqNum;
-  public final Optional<ByteString> fencingToken;
+  public final Optional<String> fencingToken;
 
   private AppendInput(
-      List<AppendRecord> records, Optional<Long> matchSeqNum, Optional<ByteString> fencingToken) {
+      List<AppendRecord> records, Optional<Long> matchSeqNum, Optional<String> fencingToken) {
     this.records = records;
     this.matchSeqNum = matchSeqNum;
     this.fencingToken = fencingToken;
@@ -38,7 +37,7 @@ public class AppendInput implements MeteredBytes, Serializable {
   public static class AppendInputBuilder {
     private List<AppendRecord> records = List.of();
     private Optional<Long> matchSeqNum = Optional.empty();
-    private Optional<ByteString> fencingToken = Optional.empty();
+    private Optional<String> fencingToken = Optional.empty();
 
     public AppendInputBuilder withRecords(List<AppendRecord> records) {
       this.records = records;
@@ -50,7 +49,7 @@ public class AppendInput implements MeteredBytes, Serializable {
       return this;
     }
 
-    public AppendInputBuilder withFencingToken(ByteString fencingToken) {
+    public AppendInputBuilder withFencingToken(String fencingToken) {
       this.fencingToken = Optional.of(fencingToken);
       return this;
     }
@@ -64,8 +63,8 @@ public class AppendInput implements MeteredBytes, Serializable {
           });
       fencingToken.ifPresent(
           token -> {
-            if (token.size() > 16) {
-              throw new IllegalArgumentException("fencingToken must be less than 16 bytes");
+            if (token.length() > 36) {
+              throw new IllegalArgumentException("fencingToken must be 36 or fewer UTF-8 bytes");
             }
           });
       var provisional = new AppendInput(records, matchSeqNum, fencingToken);

@@ -18,14 +18,25 @@ public class MockReadSessionStreamService extends StreamServiceImplBase {
       ReadSessionRequest request, StreamObserver<ReadSessionResponse> responseObserver) {
     System.out.println("MockStreamService.readSession req " + request);
 
-    var startSeqNum = request.getStartSeqNum();
+    long startSeqNum = 0;
+    switch (request.getStartCase()) {
+      case SEQ_NUM:
+        startSeqNum = request.getSeqNum();
+        break;
+      case TIMESTAMP:
+      case TAIL_OFFSET:
+      case START_NOT_SET:
+        startSeqNum = 0;
+        break;
+    }
+
     var limit = request.getLimit().getCount();
     if (!(limit > 0)) {
       throw new RuntimeException("count must be set");
     }
     for (var seqNum = startSeqNum; seqNum < startSeqNum + limit; seqNum++) {
       if (calls.getAndIncrement() % 10 == 0) {
-        responseObserver.onError(new RuntimeException("I messed up!"));
+        responseObserver.onError(new RuntimeException("Response observer failed"));
         return;
       } else {
         var batch =
@@ -35,6 +46,7 @@ public class MockReadSessionStreamService extends StreamServiceImplBase {
                         .addRecords(
                             SequencedRecord.newBuilder()
                                 .setSeqNum(seqNum)
+                                .setTimestamp(System.currentTimeMillis())
                                 .setBody(ByteString.copyFromUtf8(String.format("fake %s", seqNum)))
                                 .build())
                         .build())

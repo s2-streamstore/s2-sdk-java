@@ -15,7 +15,7 @@ public class BasinDemo {
 
   public static void main(String[] args) throws Exception {
     final var config =
-        Config.newBuilder(System.getenv("S2_AUTH_TOKEN"))
+        Config.newBuilder(System.getenv("S2_ACCESS_TOKEN"))
             .withEndpoints(Endpoints.fromEnvironment())
             .build();
 

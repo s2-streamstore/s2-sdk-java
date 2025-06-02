@@ -11,11 +11,11 @@ public class Header {
     this.value = value;
   }
 
-  public s2.v1alpha.Header toProto() {
-    return s2.v1alpha.Header.newBuilder().setName(name).setValue(value).build();
-  }
-
   public static Header fromProto(s2.v1alpha.Header protoHeader) {
     return new Header(protoHeader.getName(), protoHeader.getValue());
+  }
+
+  public s2.v1alpha.Header toProto() {
+    return s2.v1alpha.Header.newBuilder().setName(name).setValue(value).build();
   }
 }

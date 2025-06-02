@@ -10,12 +10,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import s2.types.Batch;
 import s2.types.ReadOutput;
 import s2.types.ReadSessionRequest;
+import s2.types.Start;
 import s2.v1alpha.ReadSessionResponse;
 
 public class ReadSession implements AutoCloseable {
@@ -27,7 +29,7 @@ public class ReadSession implements AutoCloseable {
   final ScheduledExecutorService executor;
   final StreamClient client;
 
-  final AtomicLong nextStartSeqNum;
+  final AtomicReference<Start> nextStart;
   final AtomicLong consumedRecords = new AtomicLong();
   final AtomicLong consumedBytes = new AtomicLong(0);
   final AtomicInteger remainingAttempts;
@@ -52,7 +54,7 @@ public class ReadSession implements AutoCloseable {
     this.onResponse = onResponse;
     this.onError = onError;
     this.request = request;
-    this.nextStartSeqNum = new AtomicLong(request.startSeqNum);
+    this.nextStart = new AtomicReference<>(request.start);
     this.remainingAttempts = new AtomicInteger(client.config.maxRetries);
     this.lastEvent = new AtomicLong(System.nanoTime());
 
@@ -134,12 +136,12 @@ public class ReadSession implements AutoCloseable {
 
     return Futures.catchingAsync(
         readSessionInner(
-            request.update(nextStartSeqNum.get(), consumedRecords.get(), consumedBytes.get()),
+            request.update(nextStart.get(), consumedRecords.get(), consumedBytes.get()),
             resp -> {
               if (resp instanceof Batch) {
                 final Batch batch = (Batch) resp;
                 var lastRecordIdx = batch.lastSeqNum();
-                lastRecordIdx.ifPresent(v -> nextStartSeqNum.set(v + 1));
+                lastRecordIdx.ifPresent(v -> nextStart.set(Start.seqNum(v + 1)));
                 consumedRecords.addAndGet(batch.sequencedRecordBatch.records.size());
                 consumedBytes.addAndGet(batch.meteredBytes());
               }
