@@ -140,8 +140,8 @@ public class ReadSession implements AutoCloseable {
             resp -> {
               if (resp instanceof Batch) {
                 final Batch batch = (Batch) resp;
-                var lastRecordIdx = batch.lastSeqNum();
-                lastRecordIdx.ifPresent(v -> nextStart.set(Start.seqNum(v + 1)));
+                var lastPosition = batch.lastPosition();
+                lastPosition.ifPresent(v -> nextStart.set(Start.seqNum(v.seqNum + 1)));
                 consumedRecords.addAndGet(batch.sequencedRecordBatch.records.size());
                 consumedBytes.addAndGet(batch.meteredBytes());
               }

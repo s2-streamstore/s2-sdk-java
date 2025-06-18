@@ -61,12 +61,10 @@ public class ManagedReadSessionDemo {
                 if (elem instanceof Batch batch) {
                   var size = batch.meteredBytes();
                   logger.info(
-                      "batch of {} bytes, seqnums {}..={} / instants {}..={}",
+                      "batch of {} bytes, first={} ..= last={}",
                       size,
-                      batch.firstSeqNum(),
-                      batch.lastSeqNum(),
-                      batch.firstTimestamp(),
-                      batch.lastTimestamp());
+                      batch.firstPosition(),
+                      batch.lastPosition());
                   receivedBytes.addAndGet(size);
                 } else {
                   logger.info("non batch received: {}", elem);

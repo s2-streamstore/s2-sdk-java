@@ -235,7 +235,7 @@ public class ManagedAppendSession implements AutoCloseable {
   }
 
   private void validate(InflightRecord record, AppendOutput output) {
-    var numRecordsForAcknowledgement = output.endSeqNum - output.startSeqNum;
+    var numRecordsForAcknowledgement = output.end.seqNum - output.start.seqNum;
     if (numRecordsForAcknowledgement != record.input.records.size()) {
       throw Status.INTERNAL
           .withDescription(

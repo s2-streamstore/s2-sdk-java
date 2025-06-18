@@ -1,6 +1,5 @@
 package s2.types;
 
-import java.time.Instant;
 import java.util.Optional;
 
 public final class Batch implements ReadOutput, MeteredBytes {
@@ -11,27 +10,17 @@ public final class Batch implements ReadOutput, MeteredBytes {
     this.sequencedRecordBatch = sequencedRecordBatch;
   }
 
-  public Optional<Long> firstSeqNum() {
-    return this.sequencedRecordBatch.records.stream().findFirst().map(sr -> sr.seqNum);
+  public Optional<StreamPosition> firstPosition() {
+    return this.sequencedRecordBatch.records.stream()
+        .findFirst()
+        .map(sr -> new StreamPosition(sr.seqNum, sr.timestamp));
   }
 
-  public Optional<Long> lastSeqNum() {
+  public Optional<StreamPosition> lastPosition() {
     if (!this.sequencedRecordBatch.records.isEmpty()) {
-      return Optional.of(
-          this.sequencedRecordBatch.records.get(sequencedRecordBatch.records.size() - 1).seqNum);
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  public Optional<Instant> firstTimestamp() {
-    return this.sequencedRecordBatch.records.stream().findFirst().map(sr -> sr.timestamp);
-  }
-
-  public Optional<Instant> lastTimestamp() {
-    if (!this.sequencedRecordBatch.records.isEmpty()) {
-      return Optional.of(
-          this.sequencedRecordBatch.records.get(sequencedRecordBatch.records.size() - 1).timestamp);
+      var lastRecord =
+          this.sequencedRecordBatch.records.get(this.sequencedRecordBatch.records.size() - 1);
+      return Optional.of(new StreamPosition(lastRecord.seqNum, lastRecord.timestamp));
     } else {
       return Optional.empty();
     }

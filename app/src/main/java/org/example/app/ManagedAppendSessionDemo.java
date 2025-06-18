@@ -25,8 +25,8 @@ public class ManagedAppendSessionDemo {
   private static final Logger logger =
       LoggerFactory.getLogger(ManagedAppendSessionDemo.class.getName());
 
-  // 512KiB
-  private static final Integer TARGET_BATCH_SIZE = 512 * 1024;
+  // 128KiB
+  private static final Integer TARGET_BATCH_SIZE = 128 * 1024;
 
   public static void main(String[] args) throws Exception {
     final var authToken = System.getenv("S2_ACCESS_TOKEN");

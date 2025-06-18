@@ -1,25 +1,25 @@
 package s2.types;
 
 public class AppendOutput {
-  public final long startSeqNum;
-  public final long endSeqNum;
-  public final long nextSeqNum;
+  public final StreamPosition start;
+  public final StreamPosition end;
+  public final StreamPosition tail;
 
-  AppendOutput(long startSeqNum, long endSeqNum, long nextSeqNum) {
-    this.startSeqNum = startSeqNum;
-    this.endSeqNum = endSeqNum;
-    this.nextSeqNum = nextSeqNum;
+  AppendOutput(StreamPosition start, StreamPosition end, StreamPosition tail) {
+    this.start = start;
+    this.end = end;
+    this.tail = tail;
   }
 
   public static AppendOutput fromProto(s2.v1alpha.AppendOutput appendOutput) {
     return new AppendOutput(
-        appendOutput.getStartSeqNum(), appendOutput.getEndSeqNum(), appendOutput.getNextSeqNum());
+        new StreamPosition(appendOutput.getStartSeqNum(), appendOutput.getStartTimestamp()),
+        new StreamPosition(appendOutput.getEndSeqNum(), appendOutput.getEndTimestamp()),
+        new StreamPosition(appendOutput.getNextSeqNum(), appendOutput.getLastTimestamp()));
   }
 
   @Override
   public String toString() {
-    return String.format(
-        "AppendOutput[startSeqNum=%s, endSeqNum=%s, nextSeqNum=%s]",
-        startSeqNum, endSeqNum, nextSeqNum);
+    return String.format("AppendOutput[start=%s, end=%s, tail=%s]", start, end, tail);
   }
 }

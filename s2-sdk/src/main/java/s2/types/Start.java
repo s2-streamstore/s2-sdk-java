@@ -1,14 +1,12 @@
 package s2.types;
 
-import java.time.Instant;
-
 public abstract class Start {
   public static SeqNum seqNum(long seqNum) {
     return new SeqNum(seqNum);
   }
 
-  public static Timestamp timestamp(Instant instant) {
-    return new Timestamp(instant.toEpochMilli());
+  public static Timestamp timestamp(long timestamp) {
+    return new Timestamp(timestamp);
   }
 
   public static TailOffset tailOffset(long tailOffset) {
@@ -28,10 +26,6 @@ public abstract class Start {
 
     private Timestamp(long value) {
       this.value = value;
-    }
-
-    public Instant toInstant() {
-      return Instant.ofEpochMilli(value);
     }
   }
 
