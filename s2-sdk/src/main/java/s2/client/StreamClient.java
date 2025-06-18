@@ -21,12 +21,12 @@ import s2.types.AppendOutput;
 import s2.types.ReadOutput;
 import s2.types.ReadRequest;
 import s2.types.ReadSessionRequest;
+import s2.types.StreamPosition;
 import s2.v1alpha.AppendRequest;
 import s2.v1alpha.AppendResponse;
 import s2.v1alpha.AppendSessionRequest;
 import s2.v1alpha.AppendSessionResponse;
 import s2.v1alpha.CheckTailRequest;
-import s2.v1alpha.CheckTailResponse;
 import s2.v1alpha.StreamServiceGrpc;
 import s2.v1alpha.StreamServiceGrpc.StreamServiceFutureStub;
 import s2.v1alpha.StreamServiceGrpc.StreamServiceStub;
@@ -81,9 +81,9 @@ public class StreamClient extends BasinClient {
   /**
    * Check the sequence number that will be assigned to the next record on a stream.
    *
-   * @return future of the next sequence number
+   * @return future of the tail's position
    */
-  public ListenableFuture<Long> checkTail() {
+  public ListenableFuture<StreamPosition> checkTail() {
     return withTimeout(
         () ->
             Futures.transform(
@@ -92,7 +92,7 @@ public class StreamClient extends BasinClient {
                     () ->
                         this.futureStub.checkTail(
                             CheckTailRequest.newBuilder().setStream(streamName).build())),
-                CheckTailResponse::getNextSeqNum,
+                (resp) -> new StreamPosition(resp.getNextSeqNum(), resp.getLastTimestamp()),
                 executor));
   }
 
