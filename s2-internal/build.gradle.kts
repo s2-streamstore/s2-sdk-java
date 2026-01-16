@@ -32,6 +32,14 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+sourceSets {
+    main {
+        proto {
+            srcDir("../s2-specs/s2")
+        }
+    }
+}
+
 val protobufVersion: String = libs.versions.protobuf.get()
 val grpcVersion: String = libs.versions.grpc.get()
 protobuf {
