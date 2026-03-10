@@ -1,8 +1,37 @@
-# S2 Java SDK
+<div align="center">
 
-A Java SDK for interacting with the S2 streaming service.
+  <p>
+    <!-- Light mode logo -->
+    <a href="https://s2.dev#gh-light-mode-only">
+      <img src="./assets/s2-black.png" height="60">
+    </a>
+    <!-- Dark mode logo -->
+    <a href="https://s2.dev#gh-dark-mode-only">
+      <img src="./assets/s2-white.png" height="60">
+    </a>
+  </p>
 
-#### Current Java API Documentation
+  <h1>Java SDK for S2</h1>
+
+  <p>
+    <!-- Discord (chat) -->
+    <a href="https://discord.gg/vTCs7kMkAf"><img src="https://img.shields.io/discord/1209937852528599092?logo=discord" /></a>
+    <!-- LICENSE -->
+    <a href="./LICENSE"><img src="https://img.shields.io/github/license/s2-streamstore/s2-sdk-java" /></a>
+  </p>
+</div>
+
+> [!WARNING]
+> **This SDK is deprecated and will stop working.**
+>
+> It relies on our `v1alpha` gRPC API that is being retired.
+>
+> Please use one of the [currently supported SDKs](https://s2.dev/docs/sdk), or
+> the [HTTP API](https://s2.dev/docs/api/protocol) directly.
+>
+> If you have a need for Java support, get in touch at [hi@s2.dev](mailto:hi@s2.dev).
+
+#### Java API Documentation
 
 - [s2-sdk @ 0.0.16](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-sdk/0.0.16/)
 - [s2-internal @ 0.0.16](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-internal/0.0.16/)
@@ -59,9 +88,9 @@ Add this dependency to your `pom.xml`:
 ```xml
 
 <dependency>
-  <groupId>dev.s2</groupId>
-  <artifactId>s2-sdk</artifactId>
-  <version><!--Use the current version specified in `gradle.properties`--></version>
+    <groupId>dev.s2</groupId>
+    <artifactId>s2-sdk</artifactId>
+    <version><!--Use the current version specified in `gradle.properties`--></version>
 </dependency>
 ```
 
