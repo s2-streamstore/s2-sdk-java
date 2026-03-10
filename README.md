@@ -21,7 +21,8 @@
   </p>
 </div>
 
-> **⚠️ This SDK is deprecated and will stop working. ⚠️**
+> [!WARNING]
+> **This SDK is deprecated and will stop working.**
 >
 > It relies on our `v1alpha` gRPC API that is being retired.
 >
