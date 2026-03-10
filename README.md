@@ -1,6 +1,27 @@
-# S2 Java SDK
+<div align="center">
 
-A Java SDK for interacting with the S2 streaming service.
+  <p>
+    <!-- Light mode logo -->
+    <a href="https://s2.dev#gh-light-mode-only">
+      <img src="./assets/s2-black.png" height="60">
+    </a>
+    <!-- Dark mode logo -->
+    <a href="https://s2.dev#gh-dark-mode-only">
+      <img src="./assets/s2-white.png" height="60">
+    </a>
+  </p>
+
+  <h1>Java SDK for S2</h1>
+
+  <p>
+    <!-- Discord (chat) -->
+    <a href="https://discord.gg/vTCs7kMkAf"><img src="https://img.shields.io/discord/1209937852528599092?logo=discord" /></a>
+    <!-- Github Actions (CI) -->
+    <a href="https://github.com/s2-streamstore/s2-sdk-java/actions?query=branch%3Amain++"><img src="https://github.com/s2-streamstore/s2-sdk-java/actions/workflows/ci.yml/badge.svg" /></a>
+    <!-- LICENSE -->
+    <a href="./LICENSE"><img src="https://img.shields.io/github/license/s2-streamstore/s2-sdk-java" /></a>
+  </p>
+</div>
 
 #### Current Java API Documentation
 
@@ -59,9 +80,9 @@ Add this dependency to your `pom.xml`:
 ```xml
 
 <dependency>
-  <groupId>dev.s2</groupId>
-  <artifactId>s2-sdk</artifactId>
-  <version><!--Use the current version specified in `gradle.properties`--></version>
+    <groupId>dev.s2</groupId>
+    <artifactId>s2-sdk</artifactId>
+    <version><!--Use the current version specified in `gradle.properties`--></version>
 </dependency>
 ```
 
