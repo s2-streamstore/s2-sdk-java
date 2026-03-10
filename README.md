@@ -16,14 +16,21 @@
   <p>
     <!-- Discord (chat) -->
     <a href="https://discord.gg/vTCs7kMkAf"><img src="https://img.shields.io/discord/1209937852528599092?logo=discord" /></a>
-    <!-- Github Actions (CI) -->
-    <a href="https://github.com/s2-streamstore/s2-sdk-java/actions?query=branch%3Amain++"><img src="https://github.com/s2-streamstore/s2-sdk-java/actions/workflows/ci.yml/badge.svg" /></a>
     <!-- LICENSE -->
     <a href="./LICENSE"><img src="https://img.shields.io/github/license/s2-streamstore/s2-sdk-java" /></a>
   </p>
 </div>
 
-#### Current Java API Documentation
+> **⚠️ This SDK is deprecated and will stop working. ⚠️**
+>
+> It relies on our `v1alpha` gRPC API that is being retired.
+>
+> Please use one of the [currently supported SDKs](https://s2.dev/docs/sdk), or
+> the [HTTP API](https://s2.dev/docs/api/protocol) directly.
+>
+> If you have a need for Java support, get in touch at [hi@s2.dev](mailto:hi@s2.dev).
+
+#### Java API Documentation
 
 - [s2-sdk @ 0.0.16](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-sdk/0.0.16/)
 - [s2-internal @ 0.0.16](https://s2-streamstore.github.io/s2-sdk-java/javadocs/s2-internal/0.0.16/)
